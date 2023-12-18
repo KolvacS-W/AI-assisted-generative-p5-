@@ -1,0 +1,93 @@
+
+<!DOCTYPE html>
+<html>
+<head>
+    <title>p5.js Code Executor</title>
+    <style>
+        .row {
+            display: flex;
+            justify-content: space-between;
+        }
+        .frame {
+            border: none;
+            width: 400px;
+            height: 400px;
+        }
+    </style>
+</head>
+<body>
+    <textarea id="p5-code" rows="50" cols="50">
+        let swirls = [];
+        let t = 0;
+        
+        function setup() {
+          createCanvas(400, 400);
+          
+          // Coordinates for swirls
+          let coords = [
+            [77, 254],
+            [77, 115],
+            [220, 115],
+            [289, 235],
+            [187, 351],
+            [312, 65]
+          ];
+        
+          for(let i = 0; i < coords.length; i++) {
+            swirls.push(new Swirl(coords[i][0], coords[i][1]));
+          }
+        }
+        
+        function draw() {
+          background(255);
+          stroke(0, 0, 255); // Blue color
+          strokeWeight(2);
+          
+          // Draw wave
+          for(let i = 0; i < width; i += 10) {
+            let y = 50 * sin(i * 0.01 + t) + 200;
+            line(i, y, i, height);
+          }
+          
+          // Draw swirls
+          for(let i = 0; i < swirls.length; i++) {
+            swirls[i].display();
+            swirls[i].rotate();
+          }
+          
+          t += 0.02;
+        }
+        
+        class Swirl {
+          constructor(x, y) {
+            this.x = x;
+            this.y = y;
+            this.angle = 0;
+          }
+          
+          display() {
+            noFill();
+            arc(this.x, this.y, 50, 50, 0, this.angle);
+          }
+          
+          rotate() {
+            this.angle += 0.02;
+            if(this.angle > TWO_PI) {
+              this.angle -= TWO_PI;
+            }
+          }
+        }
+    </textarea>
+    <button id="execute-btn">Execute p5.js Code</button>
+    <iframe id="p5-iframe" style="border: none; width: 400px; height: 400px;"></iframe>
+
+    <div class="row">
+        <div id="frame-container" class="frame"></div>
+        <div id="processed-container" class="frame"></div>
+    </div>
+
+    <!-- Load Main App Script -->
+    <script src="app.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/browser-image-compression/1.0.14/browser-image-compression.min.js"></script>
+</body>
+</html>
