@@ -3,6 +3,9 @@ const express = require('express');
 const fal = require('@fal-ai/serverless-client');
 const app = express();
 const bodyParser = require('body-parser'); // Import body-parser
+const path = require('path');
+const axios = require('axios'); // Add axios for downloading the image
+const fs = require('fs');
 
 const corsOptions = {
     origin: '*', // Adjust as necessary for security
@@ -44,6 +47,15 @@ app.post('/callfal', async (req, res, next) => {
         }
 
         console.log('result from server:', result)
+
+          // Download and save the resulting image
+        // const imageUrl = result.images[0].url;
+        // const outputImagePath = path.join(__dirname, 'images', './output-image-name'+Math.random().toString()+'.jpg'); // Replace with your desired output filename
+
+        // const response = await axios.get(imageUrl, { responseType: 'arraybuffer' });
+        // fs.writeFileSync(outputImagePath, response.data);
+
+        // console.log('Image processing complete. Check the images folder for the result.');
 
         res.send(result);
     } catch (error) {

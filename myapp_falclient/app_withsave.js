@@ -120,28 +120,69 @@ window.addEventListener('message', async function(event) {
     }
 });
 
+// New function to save an image to a folder
+function saveImageToFolder(imageSrc, fileName) {
+    // Create a new image element
+    const img = new Image();
+    img.src = imageSrc;
+
+    // Add an event listener to handle image loading
+    img.onload = async () => {
+        const canvas = document.createElement('canvas');
+        canvas.width = img.width;
+        canvas.height = img.height;
+        const ctx = canvas.getContext('2d');
+        ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+
+        const blob = await new Promise(resolve => canvas.toBlob(resolve));
+        const formData = new FormData();
+        formData.append('image', blob, fileName);
+
+        try {
+            const folderUrl = 'http://localhost:3000/saveImage'; // Replace with your server endpoint
+            const response = await fetch(folderUrl, {
+                method: 'POST',
+                body: formData,
+            });
+
+            if (!response.ok) {
+                throw new Error(`HTTP error! Status: ${response.status}`);
+            }
+
+            console.log(`Image '${fileName}' saved successfully.`);
+        } catch (error) {
+            console.error(`Error saving image '${fileName}':`, error);
+        }
+    };
+}
+
+// Modify the 'displayNextImage' function to save the image to a folder
 function displayNextImage() {
     if (imageQueue.length > 0) {
         isImageBeingProcessed = true;
         let processedFrame = document.getElementById('processed-frame');
-        let processedContainer = document.getElementById('processed-container');
 
         if (!processedFrame) {
             processedFrame = document.createElement('img');
             processedFrame.id = 'processed-frame';
-            processedFrame.style.width = '400px'; // Match the size of the p5.js canvas
-            processedFrame.style.height = '400px';
-            processedContainer.appendChild(processedFrame); // Append to processed-container
+            processedFrame.className = 'processed-frame-style';
+            // frameContainer.appendChild(processedFrame);
         }
 
         processedFrame.onload = function() {
+            // Save the image to a folder before resetting the flag
+            saveImageToFolder(imageQueue[0], `image${new Date().getTime()}.jpg`);
             isImageBeingProcessed = false;
-            imageQueue.shift();
-            displayNextImage();
+            imageQueue.shift(); // Remove the displayed image from the queue
+            displayNextImage(); // Display the next image in the queue
         };
 
-        processedFrame.src = imageQueue[0];
+        processedFrame.src = imageQueue[0]; // Set the source to the first image in the queue
     }
 }
 
+// Add an event listener to reset the flag once the image is loaded
+document.getElementById('processed-frame').addEventListener('load', function() {
+    isProcessedFrameAvailable = false; // Reset the flag once the image is loaded
+});
 
