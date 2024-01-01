@@ -73,7 +73,11 @@ wss.on('connection', function connection(ws) {
                 falConnection.send({
                     prompt: data.prompt,
                     image_url: data.image_url,
-                    strength: data.strength
+                    strength: data.strength,
+                    // image_size: {
+                    //     "width": 512,
+                    //     "height": 512
+                    // },
                 });
             } catch (error) {
                 console.error('Error sending data to FAL:', error);
