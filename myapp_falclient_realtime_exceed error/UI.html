@@ -1,0 +1,48 @@
+
+<!DOCTYPE html>
+<html>
+<head>
+    <title>p5.js Code Executor</title>
+    <style>
+        .row {
+            display: flex;
+            justify-content: space-between;
+        }
+        .frame {
+            border: none;
+            width: 400px;
+            height: 400px;
+        }
+    </style>
+</head>
+<body>
+    <textarea id="p5-code" rows="20" cols="50">
+        function setup() {
+            createCanvas(windowWidth, windowHeight, WEBGL);
+          }
+          
+          function draw() {
+            background(250);
+            normalMaterial();
+            translate(0, 0, 0);
+            push();
+            rotateZ(frameCount * 0.01);
+            rotateX(frameCount * 0.01);
+            rotateY(frameCount * 0.01);
+            box(200, 200, 200);
+            pop();
+          }
+    </textarea>
+    <button id="execute-btn">Execute p5.js Code</button>
+    <iframe id="p5-iframe" style="border: none; width: 400px; height: 400px;"></iframe>
+
+    <div class="row">
+        <div id="frame-container" class="frame"></div>
+        <div id="processed-container" class="frame"></div>
+    </div>
+
+    <!-- Load Main App Script -->
+    <script src="app.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/browser-image-compression/1.0.14/browser-image-compression.min.js"></script>
+</body>
+</html>

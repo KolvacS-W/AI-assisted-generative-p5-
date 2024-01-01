@@ -1,0 +1,309 @@
+
+<!DOCTYPE html>
+<html>
+<head>
+    <title>p5.js Code Executor</title>
+    <style>
+        .row {
+            display: flex;
+            justify-content: space-between;
+        }
+        .frame {
+            border: none;
+            width: 100px;
+            height: 100px;
+        }
+    </style>
+</head>
+<body>
+    <textarea id="p5-code" rows="20" cols="50">
+        ///////////////////////////////////////////////////////////
+        // Variable definitions ///////////////////////////////////
+        ///////////////////////////////////////////////////////////
+        
+        var windAngle = 0;
+        var minX;
+        var maxX;
+        var minY;
+        var maxY;
+        var blinkUpdate;
+        var typedText;
+        var lastSeed;
+        var leaveImage;
+        var curContext; // Javascript drawing context (for faster rendering)
+        var width;
+        var height;
+        var buffer;
+        var date = new Date();
+        var treeScale;
+        var growthTime;
+        
+        
+        ///////////////////////////////////////////////////////////
+        // Class that handles the branches ////////////////////////
+        ///////////////////////////////////////////////////////////
+        class Branch {
+        
+            ///////////////////////////////////////////////////////////
+            // Constructor ////////////////////////////////////////////
+            ///////////////////////////////////////////////////////////
+            constructor(parent, x, y, angleOffset, length) {
+                this.growth = 0;
+                this.windForce = 0;
+                this.blastForce = 0;
+                this.parent = parent;
+                this.x = x;
+                this.y = y;
+                if(this.parent != null) {
+                    this.angle = this.parent.angle+angleOffset;
+                    this.angleOffset = angleOffset;
+                } else {
+                    this.angle = angleOffset;
+                    this.angleOffset = -0.2+random(0.4);
+                }
+        
+                this.length = length;
+                let xB = x + sin(this.angle) * length;
+                let yB = y + cos(this.angle) * length;
+                if(length > 10) {
+                    if(length+random(length*10) > 30){
+                        this.branchA = new Branch(this, xB, yB, -0.1-random(0.4) + ((this.angle % TWO_PI) > PI ? -1.0/length : +1.0/length), length*(0.6+random(0.3)));
+                    }
+                    if(length+random(length*10) > 30){
+                        this.branchB = new Branch(this, xB, yB, 0.1+random(0.4) + ((this.angle % TWO_PI) > PI ? -1.0/length : +1.0/length), length*(0.6+random(0.3)));
+                    }
+                    if(this.branchB != null && this.branchA == null) {
+                        this.branchA = this.branchB;
+                        this.branchB = null;
+                    }
+                }
+                minX = min(xB, minX);
+                maxX = max(xB, maxX);
+                minY = min(yB, minY);
+                maxY = max(yB, maxY);
+            }
+             
+             
+            ///////////////////////////////////////////////////////////
+            // Set scale //////////////////////////////////////////////
+            ///////////////////////////////////////////////////////////
+            setScale(treeScale) {
+                this.length *= treeScale;
+                if(this.branchA != null) {
+                    this.branchA.setScale(treeScale);
+                    if(this.branchB != null)
+                        this.branchB.setScale(treeScale);
+                }
+            }
+             
+             
+            ///////////////////////////////////////////////////////////
+            // Update /////////////////////////////////////////////////
+            ///////////////////////////////////////////////////////////
+            update() {
+                if(this.parent != null) {
+                    this.x = this.parent.x + sin(this.parent.angle) * this.parent.length * this.parent.growth;
+                    this.y = this.parent.y + cos(this.parent.angle) * this.parent.length * this.parent.growth;
+                    this.windForce = this.parent.windForce * (1.0+5.0/this.length) + this.blastForce;
+                    this.blastForce = (this.blastForce + sin(this.x/2+windAngle)*0.005/this.length) * 0.98;
+                    this.angle = this.parent.angle + this.angleOffset + this.windForce + this.blastForce;
+                }
+                if(this.branchA != null) {
+                    this.branchA.update();
+                    if(this.branchB != null)
+                        this.branchB.update();
+                }
+            }
+        
+            ///////////////////////////////////////////////////////////
+            // growUp /////////////////////////////////////////////////
+            ///////////////////////////////////////////////////////////
+            growUp() {
+                if(this.parent != null) {
+                    this.growth = min(this.growth + 0.1*this.parent.growth, 1);
+                } else
+                    this.growth = min(this.growth + 0.1, 1);
+                if(this.branchA != null) {
+                    this.branchA.growUp();
+                    if(this.branchB != null)
+                        this.branchB.growUp();
+                }
+            }
+              
+              
+            ///////////////////////////////////////////////////////////
+            // Render /////////////////////////////////////////////////
+            ///////////////////////////////////////////////////////////
+            render() {
+                if(this.branchA != null) {
+                    let xB = this.x;
+                    let yB = this.y;
+                    if(this.parent != null) {
+                        xB += (this.x-this.parent.x) * 0.4;
+                        yB += (this.y-this.parent.y) * 0.4;
+                    } else {
+                        xB += sin(this.angle+this.angleOffset) * this.length * 0.3;
+                        yB += cos(this.angle+this.angleOffset) * this.length * 0.3;
+                    }
+                    /* PROCESSING WAY (slow)*/
+                    // stroke(floor(1100/this.length));
+                    // strokeWeight(this.length/5);
+                    // beginShape();
+                    // vertex(this.x, this.y);
+                    // bezierVertex(xB, yB, xB, yB, this.branchA.x, this.branchA.y);
+                    // endShape();
+                    
+                    curContext.beginPath();
+                    curContext.moveTo(this.x, this.y);
+                    curContext.bezierCurveTo(xB, yB, xB, yB, this.branchA.x, this.branchA.y);
+                    let branchColor = floor(1100/this.length);
+                    curContext.strokeStyle = "purple";
+                    curContext.lineWidth = this.length/5;
+                    curContext.stroke();
+                    this.branchA.render();
+                    if(this.branchB != null)
+                        this.branchB.render();
+                } else {
+                    push();
+                    translate(this.x, this.y);
+                    rotate(-1 * this.angle);
+                    image(leaveImage, -leaveImage.width/2, 0);
+                    // image(leaveImage, 10, 0);
+                    pop();
+                }
+            }
+             
+            
+        }
+        
+        
+        var tree;
+         
+         
+        ///////////////////////////////////////////////////////////
+        // Init ///////////////////////////////////////////////////
+        ///////////////////////////////////////////////////////////
+        function setup() {
+            createCanvas(windowWidth/1.1, windowHeight/1.1, P2D); // Set screen size & renderer
+            width = windowWidth/1.1;
+            height = windowHeight/1.1;
+            textFont("Verdana"); // Create font
+            textSize(24);
+            back = createGraphics(width, height, P2D);
+            createNewTree(str(year() * 365 + month() * 30 + day()));
+            leaveImage = createLeaveImage();
+        
+            curContext = drawingContext; // Get javascript drawing context
+        
+            growthTime = 0;
+        }
+         
+         
+        ///////////////////////////////////////////////////////////
+        // Create leave image /////////////////////////////////////
+        ///////////////////////////////////////////////////////////
+        function createLeaveImage() {
+            let scale2 = treeScale/1.5;
+            buffer = createGraphics(12 * scale2, 18 * scale2, P2D);
+            // buffer.beginDraw();
+            buffer.background(color(0, 0, 0, 0));
+            buffer.stroke("purple");
+            buffer.line(6 * scale2, 0 * scale2, 6 * scale2, 6 * scale2);
+            buffer.noStroke();
+            buffer.fill("orange");
+            buffer.beginShape();
+            buffer.vertex(6 * scale2, 6 * scale2);
+            buffer.bezierVertex(0 * scale2, 12 * scale2, 0 * scale2, 12 * scale2, 6 * scale2, 18 * scale2);
+            buffer.bezierVertex(12 * scale2, 12 * scale2, 12 * scale2, 12 * scale2, 6 * scale2, 6 * scale2);
+            buffer.endShape();
+            buffer.fill("lightgreen");
+            buffer.beginShape();
+            buffer.vertex(6 * scale2, 9 * scale2);
+            buffer.bezierVertex(0 * scale2, 13 * scale2, 0 * scale2, 13 * scale2, 6 * scale2, 18 * scale2);
+            buffer.bezierVertex(12 * scale2, 13 * scale2, 12 * scale2, 13 * scale2, 6 * scale2, 9 * scale2);
+            buffer.endShape();
+            buffer.stroke("lightgreen");
+            buffer.noFill();
+            buffer.bezier(6 * scale2, 9 * scale2, 5 * scale2, 11 * scale2, 5 * scale2, 12 * scale2, 6 * scale2, 15 * scale2);
+            // buffer.endDraw();
+            return buffer;
+        }
+         
+         
+        ///////////////////////////////////////////////////////////
+        // Create new tree ////////////////////////////////////////
+        ///////////////////////////////////////////////////////////
+        function createNewTree(seed) {
+            lastSeed = seed;
+            randomSeed(seed);
+            minX = width/2;
+            maxX = width/2;
+            minY = height;
+            maxY = height;
+            tree = new Branch(null, width/2, height, PI, 110);
+            let xSize = width;
+            let ySize = height;
+            treeScale = 0.5;
+            if(xSize < ySize) {
+                if(xSize > 300)
+                treeScale = xSize/600;
+            } else {
+                if(ySize > 300)
+                    treeScale = ySize/600;
+            }
+            tree.setScale(treeScale);
+            tree.x = width/2;
+            tree.y = height;
+            blinkUpdate = -1; // Set/reset variables
+            typedText = "";
+        }
+         
+         
+        
+        function draw() {
+            background("#d7d7d7");
+            fill("#009cff"); noStroke();
+            rect(120, 120, width-240, height-240);
+            noFill();
+            windAngle += 0.003;
+            tree.windForce = sin(windAngle) * 0.02;
+            tree.update();
+            if(growthTime < hour() * 5){
+                tree.growUp();  
+                growthTime += 1;
+            }
+            tree.render();
+            fill("#d7d7d7"); noStroke();
+            rect(tree.x-80, height-120, 160, 120);
+            fill("#a0a0a0");
+            // let timeString = date.toDateString() + " " + str(hour()) + ":" + str(minute())
+            // text(timeString, floor(width/2-textWidth(timeString)/2), floor(height-65+textAscent()/2));
+        }
+        
+         
+        ///////////////////////////////////////////////////////////
+        // Compute text input /////////////////////////////////////
+        ///////////////////////////////////////////////////////////
+        function keyReleased() {
+            switch(keyCode) { // Compute Non-ASCII key input
+                case 83: // Save tree
+                {
+                    save("Tree_Everyday_" + year() + "_" + month() + "_" + day() + "_" + str(hour()) + ":" + str(minute()) + ".png");
+                }        
+            }
+        }
+                        
+    </textarea>
+    <button id="execute-btn">Execute p5.js Code</button>
+    <iframe id="p5-iframe" style="border: none; width: 400px; height: 400px;"></iframe>
+
+    <div class="row">
+        <div id="frame-container" class="frame"></div>
+        <div id="processed-container" class="frame"></div>
+    </div>
+
+    <!-- Load Main App Script -->
+    <script src="app.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/browser-image-compression/1.0.14/browser-image-compression.min.js"></script>
+</body>
+</html>
