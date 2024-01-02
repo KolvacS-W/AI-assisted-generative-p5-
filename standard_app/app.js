@@ -1,4 +1,6 @@
 let isProcessedFrameAvailable = false; // Flag to track if a new processed image is available
+let screenshotCounter = 0; // Counter for screenshot frames
+let processedImageCounter = 0; // Counter for processed images
 
 document.getElementById('execute-btn').addEventListener('click', function() {
     const userCode = document.getElementById('p5-code').value;
@@ -23,7 +25,7 @@ document.getElementById('execute-btn').addEventListener('click', function() {
                     };
 
                     let lastCaptureTime = 0;
-                    const captureInterval = 100; // Capture every 1000 milliseconds
+                    const captureInterval = 100; // Capture every 100 milliseconds
 
                     window.draw = function() {
                         userSketch.draw();
@@ -44,13 +46,16 @@ document.getElementById('execute-btn').addEventListener('click', function() {
         </html>`;
 
     const blob = new Blob([iframeContent], { type: 'text/html' });
-    iframe.src = URL.createObjectURL(blob);        
+    iframe.src = URL.createObjectURL(blob);
+
+    screenshotCounter = 0; // Reset counter when execution starts
+    processedImageCounter = 0; // Reset processed image counter
 });
 
 async function compressImage(imageSrc, size) {
     const options = {
         maxSizeMB: 1, // Max file size in MB
-        maxWidthOrHeight: size, // Resize to 64x64 pixels
+        maxWidthOrHeight: size, // Resize to size pixels
         useWebWorker: true
     };
 
@@ -84,8 +89,6 @@ ws.onopen = function(event) {
     console.log("Connected to WebSocket server");
 };
 
-
-
 ws.onclose = function(event) {
     console.log("WebSocket connection closed:", event);
     // Implement your reconnection logic here
@@ -96,29 +99,20 @@ ws.onerror = function(error) {
     // Handle the error, maybe try to reconnect
 };
 
-
 window.addEventListener('message', async function(event) {
     if (event.data) {
-        // Display the screenshot image
+        screenshotCounter++; // Increment screenshot counter
         const screenshotContainer = document.getElementById('screenshot-container');
-        // Compress and resize the image
         const compressedImageSrc = await compressImage(event.data, 448);
 
-        screenshotContainer.innerHTML = `<img src="${compressedImageSrc}" style="width: 100%; border: 1px solid #ddd;">`;
+        // Display the screenshot image with counter
+        screenshotContainer.innerHTML = `<div>Frame: ${screenshotCounter}</div><img src="${compressedImageSrc}" style="width: 100%; border: 1px solid #ddd;">`;
 
-        // event.data.style.width = '400px';
-        // event.data.style.height = '400px';
-        // screenshotContainer.appendChild(event.data)
-
-        // Send the image to the WebSocket server
-        // Compress and resize the image before sending to the server
-        // const compressedImageSrc = await compressImage(event.data);
         sendImageToServer(compressedImageSrc);
-        console.log('called server')
     }
 });
+
 function sendImageToServer(imageSrc) {
-    console.log('img size:', imageSrc)
     const prompt = "digital cyberpunk tree"; // Ensure this is the prompt you want to send
     if (ws.readyState === WebSocket.OPEN) {
         ws.send(JSON.stringify({ image_url: imageSrc, prompt: prompt, strength: 0.6 }));
@@ -128,10 +122,7 @@ function sendImageToServer(imageSrc) {
     }
 }
 
-
-
 function connectWebSocket() {
-
     ws.onopen = function(event) {
         console.log("Connected to WebSocket server");
     };
@@ -168,8 +159,6 @@ function connectWebSocket() {
 // Initial WebSocket connection
 connectWebSocket();
 
-
-
 function displayNextImage() {
     if (imageQueue.length > 0) {
         isImageBeingProcessed = true;
@@ -192,33 +181,9 @@ function displayNextImage() {
         };
 
         processedFrame.src = imageQueue[0];
+        processedImageCounter++; // Increment processed image counter
+        // Display processed image counter
+        processedContainer.innerHTML = `<div>Processed Frame: ${processedImageCounter}</div>`;
+        processedContainer.appendChild(processedFrame);
     }
 }
-
-// function displayNextImage() {
-//     if (imageQueue.length > 0) {
-//         isImageBeingProcessed = true;
-//         let processedFrame = document.getElementById('processed-frame');
-
-//         if (!processedFrame) {
-//             processedFrame = document.createElement('img');
-//             processedFrame.id = 'processed-frame';
-//             processedFrame.style.width = '400px';
-//             processedFrame.style.height = '400px';
-//             processedContainer.appendChild(processedFrame);
-//         }
-
-//         processedFrame.onload = function () {
-//             isImageBeingProcessed = false;
-//             imageQueue.shift();
-//             if (imageQueue.length > 0) {
-//                 displayNextImage(); // Display the next image in the queue
-//             }
-//         };
-
-//         processedFrame.src = imageQueue[0];
-//     }
-// }
-
-
-
