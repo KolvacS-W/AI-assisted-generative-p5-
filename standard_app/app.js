@@ -25,7 +25,7 @@ document.getElementById('execute-btn').addEventListener('click', function() {
                     };
 
                     let lastCaptureTime = 0;
-                    const captureInterval = 100; // Capture every 100 milliseconds
+                    const captureInterval = 500; // Capture every 100 milliseconds
 
                     window.draw = function() {
                         userSketch.draw();
@@ -102,11 +102,30 @@ ws.onerror = function(error) {
 window.addEventListener('message', async function(event) {
     if (event.data) {
         screenshotCounter++; // Increment screenshot counter
+
+        let screenshotFrame = document.getElementById('screenshot-frame');
         const screenshotContainer = document.getElementById('screenshot-container');
         const compressedImageSrc = await compressImage(event.data, 448);
 
-        // Display the screenshot image with counter
-        screenshotContainer.innerHTML = `<div>Frame: ${screenshotCounter}</div><img src="${compressedImageSrc}" style="width: 100%; border: 1px solid #ddd;">`;
+        if (!screenshotFrame) {
+            screenshotFrame = document.createElement('img');
+            screenshotFrame.id = 'screenshot-frame';
+            screenshotFrame.style.width = '400px';
+            screenshotFrame.style.height = '400px';
+            screenshotContainer.appendChild(screenshotFrame);
+        }
+
+        // Update the src of the existing image element
+        screenshotFrame.src = compressedImageSrc;
+
+        // Update the screenshot image counter
+        let counterDiv = document.getElementById('screenshot-counter');
+        if (!counterDiv) {
+            counterDiv = document.createElement('div');
+            counterDiv.id = 'screenshot-counter';
+            screenshotContainer.insertBefore(counterDiv, screenshotContainer.firstChild);
+        }
+        counterDiv.innerHTML = `Frame: ${screenshotCounter}`;
 
         sendImageToServer(compressedImageSrc);
     }
@@ -174,16 +193,24 @@ function displayNextImage() {
 
         processedFrame.onload = function () {
             isImageBeingProcessed = false;
-            imageQueue.shift();
             if (imageQueue.length > 0) {
                 displayNextImage(); // Continue displaying next image in the queue
             }
         };
 
+        // Update the src of the existing image element instead of creating a new one
         processedFrame.src = imageQueue[0];
-        processedImageCounter++; // Increment processed image counter
+        imageQueue.shift();
+
+        // Update the processed image counter
+        processedImageCounter++; 
         // Display processed image counter
-        processedContainer.innerHTML = `<div>Processed Frame: ${processedImageCounter}</div>`;
-        processedContainer.appendChild(processedFrame);
+        let counterDiv = document.getElementById('processed-counter');
+        if (!counterDiv) {
+            counterDiv = document.createElement('div');
+            counterDiv.id = 'processed-counter';
+            processedContainer.insertBefore(counterDiv, processedContainer.firstChild);
+        }
+        counterDiv.innerHTML = `Processed Frame: ${processedImageCounter}`;
     }
 }
