@@ -183,13 +183,23 @@ window.onload = function() {
     }
 };
 
+// Array to store details for each processed image
+let processedImageDetails = [];
+
 function sendImageToServer(imageSrc) {
     if (ws.readyState === WebSocket.OPEN) {
+        // Store details for the processed image
+        processedImageDetails.push({
+            strength: currentStrength,
+            prompt: currentPrompt
+        });
+
         ws.send(JSON.stringify({ image_url: imageSrc, prompt: currentPrompt, strength: currentStrength }));
     } else {
         console.error('WebSocket is not open. Current state:', ws.readyState);
     }
 }
+
 
 function connectWebSocket() {
     ws.onopen = function(event) {
@@ -252,15 +262,15 @@ function displayNextImage() {
         processedFrame.src = imageQueue[0];
         imageQueue.shift();
 
-        // Update the processed image counter
-        processedImageCounter++; 
-        // Display processed image counter
+        // Update the processed image counter and details
+        processedImageCounter++;
+        let details = processedImageDetails.shift();
         let counterDiv = document.getElementById('processed-counter');
         if (!counterDiv) {
             counterDiv = document.createElement('div');
             counterDiv.id = 'processed-counter';
             processedContainer.insertBefore(counterDiv, processedContainer.firstChild);
         }
-        counterDiv.innerHTML = `Processed Frame: ${processedImageCounter}`;
+        counterDiv.innerHTML = `Processed Frame: ${processedImageCounter}<br>Strength: ${details.strength}<br>Prompt: ${details.prompt}`;
     }
 }
