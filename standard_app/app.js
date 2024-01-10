@@ -131,13 +131,63 @@ window.addEventListener('message', async function(event) {
     }
 });
 
+// Variables to store the current strength and prompt values
+let currentStrength = 0.6; // Default value
+let currentPrompt = "digital cyberpunk tree"; // Default value
+
+// Create UI elements for strength slider, prompt input, and update button
+const controlsContainer = document.getElementById('controls-container');
+
+// Strength slider
+const strengthSlider = document.createElement('input');
+strengthSlider.type = 'range';
+strengthSlider.min = '0';
+strengthSlider.max = '1';
+strengthSlider.step = '0.1';
+strengthSlider.value = currentStrength;
+controlsContainer.appendChild(strengthSlider);
+
+// Prompt input
+const promptInput = document.createElement('input');
+promptInput.type = 'text';
+promptInput.value = currentPrompt;
+controlsContainer.appendChild(promptInput);
+
+// Update button
+const updateButton = document.createElement('button');
+updateButton.textContent = 'Update';
+controlsContainer.appendChild(updateButton);
+
+// Update button event listener
+updateButton.addEventListener('click', function() {
+    currentStrength = parseFloat(strengthSlider.value);
+    currentPrompt = promptInput.value;
+});
+
+window.onload = function() {
+    // Reset state when page is loaded or refreshed
+    isProcessedFrameAvailable = false;
+    screenshotCounter = 0;
+    processedImageCounter = 0;
+    imageQueue = [];
+    isImageBeingProcessed = false;
+
+    // Clear existing content in screenshot and processed containers
+    const screenshotContainer = document.getElementById('screenshot-container');
+    const processedContainer = document.getElementById('processed-container');
+    if (screenshotContainer) {
+        screenshotContainer.innerHTML = '';
+    }
+    if (processedContainer) {
+        processedContainer.innerHTML = '';
+    }
+};
+
 function sendImageToServer(imageSrc) {
-    const prompt = "digital cyberpunk tree"; // Ensure this is the prompt you want to send
     if (ws.readyState === WebSocket.OPEN) {
-        ws.send(JSON.stringify({ image_url: imageSrc, prompt: prompt, strength: 0.6 }));
+        ws.send(JSON.stringify({ image_url: imageSrc, prompt: currentPrompt, strength: currentStrength }));
     } else {
         console.error('WebSocket is not open. Current state:', ws.readyState);
-        // Optionally, you can implement a retry mechanism here
     }
 }
 
