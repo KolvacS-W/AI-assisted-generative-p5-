@@ -38,6 +38,43 @@ const wss = new WebSocket.Server({ server });
 // Store active connections
 const clients = new Map();
 
+const fs = require('fs');
+const path = require('path');
+const axios = require('axios');
+
+const imageSavePath = './processed_image'; // Set your image save path
+let savedImages = [];
+
+app.post('/save-image', async (req, res) => {
+    const { imageUrl } = req.body;
+
+    try {
+        const response = await axios({
+            method: 'get',
+            url: imageUrl,
+            responseType: 'stream'
+        });
+
+        const imageName = `image_${Date.now()}.jpg`;
+        const imagePath = path.join(imageSavePath, imageName);
+        response.data.pipe(fs.createWriteStream(imagePath));
+
+        savedImages.push(imagePath);
+        if (savedImages.length > 20) {
+            // Remove the oldest image
+            let removedImage = savedImages.shift();
+            fs.unlink(removedImage, (err) => {
+                if (err) console.error("Error deleting old image:", err);
+            });
+        }
+        console.log('Image saved successfully', imageName)
+        res.json({ message: 'Image saved successfully', imageName });
+    } catch (error) {
+        console.error('Error saving image:', error);
+        res.status(500).send('Error saving image');
+    }
+});
+
 // Establish a real-time connection with FAL
 const falConnection = fal.realtime.connect("110602490-lcm", {
     onResult: (result) => {

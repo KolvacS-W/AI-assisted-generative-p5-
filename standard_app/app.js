@@ -223,6 +223,9 @@ function connectWebSocket() {
             result.images.forEach(image => {
                 if (image.url) {
                     imageQueue.push(image.url);
+                    //save images as they come
+                    let imageUrl = imageQueue[0];
+                    saveProcessedImage(imageUrl);
                 }
             });
     
@@ -237,6 +240,18 @@ function connectWebSocket() {
 
 // Initial WebSocket connection
 connectWebSocket();
+
+function saveProcessedImage(imageUrl) {
+    fetch('http://localhost:3003/save-image', {  // Use the correct server URL
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ imageUrl })
+    }).then(response => response.json())
+      .then(data => console.log(data))
+      .catch(error => console.error('Error:', error));
+}
+
+// let savedImageQueue = [];
 
 function displayNextImage() {
     if (imageQueue.length > 0) {
@@ -272,5 +287,13 @@ function displayNextImage() {
             processedContainer.insertBefore(counterDiv, processedContainer.firstChild);
         }
         counterDiv.innerHTML = `Processed Frame: ${processedImageCounter}<br>Strength: ${details.strength}<br>Prompt: ${details.prompt}`;
+    
+        // Send the processed image to the server for saving
+
+        // Update the queue for saved images
+        // savedImageQueue.push(imageUrl);
+        // if (savedImageQueue.length > 20) {
+        //     savedImageQueue.shift(); // Keep only the 20 most recent images
+        // }    
     }
 }
