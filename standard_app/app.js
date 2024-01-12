@@ -3,6 +3,8 @@ let screenshotCounter = 0; // Counter for screenshot frames
 let processedImageCounter = 0; // Counter for processed images
 
 document.getElementById('execute-btn').addEventListener('click', function() {
+    // // Clear the imageQueue when the execute button is clicked
+    // imageQueue = [];
     const userCode = document.getElementById('p5-code').value;
     const iframe = document.getElementById('p5-iframe');
 
@@ -99,8 +101,37 @@ ws.onerror = function(error) {
     // Handle the error, maybe try to reconnect
 };
 
+// Control flags
+let isCapturing = true;
+let isProcessing = true;
+
+const switchContainer = document.getElementById('switch-container');
+
+// Create Stop and Continue buttons
+const stopButton = document.createElement('button');
+stopButton.textContent = 'Stop';
+switchContainer.appendChild(stopButton);
+
+const continueButton = document.createElement('button');
+continueButton.textContent = 'Continue';
+switchContainer.appendChild(continueButton);
+
+// Event listener for Stop button
+stopButton.addEventListener('click', function() {
+    console.log('stopped')
+    isCapturing = false;
+    isProcessing = false;
+});
+
+// Event listener for Continue button
+continueButton.addEventListener('click', function() {
+    console.log('continues')
+    isCapturing = true;
+    isProcessing = true;
+});
+
 window.addEventListener('message', async function(event) {
-    if (event.data) {
+    if (event.data && isCapturing) {
         screenshotCounter++; // Increment screenshot counter
 
         let screenshotFrame = document.getElementById('screenshot-frame');
@@ -130,6 +161,8 @@ window.addEventListener('message', async function(event) {
         sendImageToServer(compressedImageSrc);
     }
 });
+
+
 
 // Variables to store the current strength and prompt values
 let currentStrength = 0.6; // Default value
@@ -164,8 +197,40 @@ updateButton.addEventListener('click', function() {
     currentPrompt = promptInput.value;
 });
 
+// Add a slider to view saved images
+// const viewSavedImagesContainer = document.createElement('div');
+// document.body.appendChild(viewSavedImagesContainer);
+
+// const savedImageSlider = document.createElement('input');
+// savedImageSlider.type = 'range';
+// savedImageSlider.min = '1';
+// savedImageSlider.max = '20';
+// savedImageSlider.step = '1';
+// savedImageSlider.value = '1'; // Default to the first image
+// viewSavedImagesContainer.appendChild(savedImageSlider);
+
+// const savedImageView = document.createElement('img');
+// savedImageView.style.width = '400px';
+// savedImageView.style.height = '400px';
+// savedImageView.style.border = '2px solid #ddd';
+// viewSavedImagesContainer.appendChild(savedImageView);
+
+// savedImageSlider.addEventListener('input', function() {
+//     const imageIndex = savedImageSlider.value;
+//     fetch(`http://localhost:3003/get-saved-image?index=${imageIndex}`)
+//         .then(response => response.blob())
+//         .then(blob => {
+//             const imageUrl = URL.createObjectURL(blob);
+//             savedImageView.src = imageUrl;
+//         })
+//         .catch(error => console.error('Error fetching saved image:', error));
+// });
+
+
 window.onload = function() {
 
+    // // Clear the imageQueue when the page loads or refreshes
+    // imageQueue = [];
     // Call to clear the images on the server
     fetch('http://localhost:3003/clear-images')
     .then(response => response.text())

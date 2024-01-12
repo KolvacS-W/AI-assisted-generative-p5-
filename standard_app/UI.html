@@ -27,6 +27,10 @@
             flex-direction: column;
             justify-content: flex-start;
         }
+        #switch-container {
+            display: flex;
+            justify-content: space-between;
+        }
         .frame {
             border: 2px solid #ddd;
             width: 400px;
@@ -341,8 +345,17 @@
                 <!-- Controls will be added by app.js -->
             </div>
             <button id="execute-btn">Execute p5.js Code</button>
+            <div id="switch-container">
+                <!-- Stop and Continue buttons will be added by app.js -->
+            </div>
         </div>
+
+        <div id="switch-container" style="display: flex; flex-direction: column;">
+            <!-- Switch buttons will be added by app.js -->
+        </div>
+
     </div>
+
     
     <div class="row">
         <iframe id="p5-iframe" class="frame"></iframe>
