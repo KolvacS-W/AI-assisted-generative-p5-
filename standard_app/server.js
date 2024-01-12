@@ -41,12 +41,32 @@ const clients = new Map();
 const fs = require('fs');
 const path = require('path');
 const axios = require('axios');
+const util = require('util');
+const readdir = util.promisify(fs.readdir);
+const unlink = util.promisify(fs.unlink);
 
-const imageSavePath = './processed_image'; // Set your image save path
+
+const imageSavePath = '/Users/wujiaqi/Downloads/saved_images'; // Set your image save path
 let savedImages = [];
+var imagenum = 0;//number of each saved image
+
+//clear saved images when refresh
+app.get('/clear-images', async (req, res) => {
+    try {
+        const files = await readdir(imageSavePath);
+        await Promise.all(files.map(file => unlink(path.join(imageSavePath, file))));
+        savedImages = []; // Clear the saved images array
+        res.send('All images cleared');
+    } catch (err) {
+        console.error(err);
+        res.status(500).send('Error clearing images');
+    }
+});
+
 
 app.post('/save-image', async (req, res) => {
     const { imageUrl } = req.body;
+    
 
     try {
         const response = await axios({
@@ -55,18 +75,24 @@ app.post('/save-image', async (req, res) => {
             responseType: 'stream'
         });
 
-        const imageName = `image_${Date.now()}.jpg`;
-        const imagePath = path.join(imageSavePath, imageName);
-        response.data.pipe(fs.createWriteStream(imagePath));
-
-        savedImages.push(imagePath);
-        if (savedImages.length > 20) {
+        // Ensure the savedImages array does not exceed 20 images
+        if (savedImages.length >= 20) {
             // Remove the oldest image
             let removedImage = savedImages.shift();
             fs.unlink(removedImage, (err) => {
                 if (err) console.error("Error deleting old image:", err);
             });
         }
+
+        // Save the new image
+        imagenum +=1;
+        const imageIndex = imagenum; 
+        const imageName = `image_${imageIndex}.jpg`;
+        const imagePath = path.join(imageSavePath, imageName);
+        response.data.pipe(fs.createWriteStream(imagePath));
+
+        savedImages.push(imagePath);
+
         console.log('Image saved successfully', imageName)
         res.json({ message: 'Image saved successfully', imageName });
     } catch (error) {
@@ -74,6 +100,7 @@ app.post('/save-image', async (req, res) => {
         res.status(500).send('Error saving image');
     }
 });
+
 
 // Establish a real-time connection with FAL
 const falConnection = fal.realtime.connect("110602490-lcm", {

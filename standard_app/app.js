@@ -165,6 +165,13 @@ updateButton.addEventListener('click', function() {
 });
 
 window.onload = function() {
+
+    // Call to clear the images on the server
+    fetch('http://localhost:3003/clear-images')
+    .then(response => response.text())
+    .then(data => console.log(data))
+    .catch(error => console.error('Error:', error));
+
     // Reset state when page is loaded or refreshed
     isProcessedFrameAvailable = false;
     screenshotCounter = 0;
