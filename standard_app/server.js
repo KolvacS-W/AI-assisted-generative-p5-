@@ -101,6 +101,25 @@ app.post('/save-image', async (req, res) => {
     }
 });
 
+app.use('/saved_images', express.static(imageSavePath));
+
+app.get('/get-smallest-image-number', (req, res) => {
+    fs.readdir(imageSavePath, (err, files) => {
+        if (err) {
+            console.error(err);
+            return res.status(500).send('Error reading image directory');
+        }
+
+        let minNumber = files
+            .map(file => parseInt(file.match(/\d+/)[0], 10)) // Extract number from filename
+            .filter(num => !isNaN(num))
+            .reduce((min, num) => num < min ? num : min, Number.MAX_VALUE);
+
+        if (minNumber === Number.MAX_VALUE) minNumber = 0; // Default to 0 if no files
+
+        res.json({ minNumber });
+    });
+});
 
 // Establish a real-time connection with FAL
 const falConnection = fal.realtime.connect("110602490-lcm", {

@@ -366,6 +366,29 @@ function displayNextImage() {
         // savedImageQueue.push(imageUrl);
         // if (savedImageQueue.length > 20) {
         //     savedImageQueue.shift(); // Keep only the 20 most recent images
+        
         // }    
     }
 }
+
+
+//result image gallery
+// Fetch and display the image based on the slider's position
+document.getElementById('show-image-button').addEventListener('click', function() {
+    const slider = document.getElementById('image-slider');
+    const imageDisplayContainer = document.getElementById('image-display-container');
+
+    fetch('http://localhost:3003/get-smallest-image-number')
+        .then(response => response.json())
+        .then(data => {
+            const smallestImageNumber = data.minNumber;
+            const adjustedImageIndex = parseInt(slider.value) + smallestImageNumber+1;
+
+            const imageUrl = `http://localhost:3003/saved_images/image_${adjustedImageIndex}.jpg`;
+            imageDisplayContainer.innerHTML = `<img src="${imageUrl}" alt="Saved Image" style="width: 100%; height: auto;">`;
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            imageDisplayContainer.innerHTML = `<p>Error loading image.</p>`;
+        });
+});
