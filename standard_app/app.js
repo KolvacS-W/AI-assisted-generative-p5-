@@ -171,6 +171,10 @@ let currentPrompt = "digital cyberpunk tree"; // Default value
 // Create UI elements for strength slider, prompt input, and update button
 const controlsContainer = document.getElementById('controls-container');
 
+const strengthLabel = document.createElement('label');
+strengthLabel.textContent = 'Strength';
+controlsContainer.appendChild(strengthLabel);
+
 // Strength slider
 const strengthSlider = document.createElement('input');
 strengthSlider.type = 'range';
@@ -392,3 +396,27 @@ document.getElementById('show-image-button').addEventListener('click', function(
             imageDisplayContainer.innerHTML = `<p>Error loading image.</p>`;
         });
 });
+
+// Add event listener for the image slider
+document.getElementById('image-slider').addEventListener('input', function() {
+    displayImageBasedOnSlider();
+});
+
+function displayImageBasedOnSlider() {
+    const slider = document.getElementById('image-slider');
+    const imageDisplayContainer = document.getElementById('image-display-container');
+
+    fetch('http://localhost:3003/get-smallest-image-number')
+        .then(response => response.json())
+        .then(data => {
+            const smallestImageNumber = data.minNumber;
+            const adjustedImageIndex = parseInt(slider.value) + smallestImageNumber;
+
+            const imageUrl = `http://localhost:3003/saved_images/image_${adjustedImageIndex}.jpg`;
+            imageDisplayContainer.innerHTML = `<img src="${imageUrl}" alt="Saved Image" style="width: 100%; height: auto;">`;
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            imageDisplayContainer.innerHTML = `<p>Error loading image.</p>`;
+        });
+}
