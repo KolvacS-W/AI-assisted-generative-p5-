@@ -31,13 +31,27 @@
             display: flex;
             justify-content: space-between;
         }
+
         .frame {
-            border: 2px solid #ddd;
-            width: 400px;
-            height: 400px;
-            background: #fff;
-            margin-right: 10px;
+        border: 2px solid #ddd;
+        width: 400px;
+        height: 400px;
+        background: #fff;
+        margin-right: 10px;
+        position: relative; /* Add this */
         }
+
+        .overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            background-color: transparent; /* Set background to transparent */
+            padding: 5px; /* Add some padding */
+            box-sizing: border-box; /* Ensures padding doesn't increase size of the overlay */
+            z-index: 1; /* Ensure overlay is above other contents */
+        }
+        
         input[type="range"], input[type="text"], button {
             margin-bottom: 10px;
             padding: 10px; /* Increased padding */
@@ -397,8 +411,15 @@
     
     <div class="row">
         <iframe id="p5-iframe" class="frame"></iframe>
-        <div id="screenshot-container" class="frame"></div>
-        <div id="processed-container" class="frame"></div>
+        <div class="frame" id="screenshot-container">
+            <div id="screenshot-overlay" class="overlay"></div>
+            <!-- Other contents of screenshot-container -->
+        </div>
+        
+        <div class="frame" id="processed-container">
+            <div id="processed-overlay" class="overlay"></div>
+            <!-- Other contents of processed-container -->
+        </div>
     </div>
 
     <!-- Empty row space -->
@@ -409,7 +430,7 @@
         <div id="slider-container">
             <label for="image-slider">Image Slider</label>
             <input type="range" id="image-slider" min="1" max="20" value="1">
-            <button id="show-image-button">Show</button>
+            <!-- <button id="show-image-button">Show</button> -->
         </div>
         <div id="image-display-container">
             <!-- Image will be displayed here -->

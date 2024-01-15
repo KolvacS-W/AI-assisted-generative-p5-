@@ -132,12 +132,11 @@ continueButton.addEventListener('click', function() {
 
 window.addEventListener('message', async function(event) {
     if (event.data && isCapturing) {
-        screenshotCounter++; // Increment screenshot counter
-
+        screenshotCounter++;
         let screenshotFrame = document.getElementById('screenshot-frame');
         const screenshotContainer = document.getElementById('screenshot-container');
         const compressedImageSrc = await compressImage(event.data, 448);
-
+    
         if (!screenshotFrame) {
             screenshotFrame = document.createElement('img');
             screenshotFrame.id = 'screenshot-frame';
@@ -145,24 +144,22 @@ window.addEventListener('message', async function(event) {
             screenshotFrame.style.height = '400px';
             screenshotContainer.appendChild(screenshotFrame);
         }
-
-        // Update the src of the existing image element
         screenshotFrame.src = compressedImageSrc;
-
-        // Update the screenshot image counter
-        let counterDiv = document.getElementById('screenshot-counter');
-        if (!counterDiv) {
-            counterDiv = document.createElement('div');
-            counterDiv.id = 'screenshot-counter';
-            screenshotContainer.insertBefore(counterDiv, screenshotContainer.firstChild);
+    
+        // Update screenshot overlay content
+        let screenshotOverlay = document.getElementById('screenshot-overlay');
+        if (!screenshotOverlay) {
+            screenshotOverlay = document.createElement('div');
+            screenshotOverlay.id = 'screenshot-overlay';
+            screenshotOverlay.className = 'overlay';
+            screenshotContainer.insertBefore(screenshotOverlay, screenshotContainer.firstChild);
         }
-        counterDiv.innerHTML = `Frame: ${screenshotCounter}`;
-
+        screenshotOverlay.textContent = `Frame: ${screenshotCounter}`;
+    
         sendImageToServer(compressedImageSrc);
     }
+    
 });
-
-
 
 // Variables to store the current strength and prompt values
 let currentStrength = 0.6; // Default value
@@ -349,53 +346,47 @@ function displayNextImage() {
             }
         };
 
-        // Update the src of the existing image element instead of creating a new one
         processedFrame.src = imageQueue[0];
         imageQueue.shift();
 
-        // Update the processed image counter and details
         processedImageCounter++;
         let details = processedImageDetails.shift();
-        let counterDiv = document.getElementById('processed-counter');
-        if (!counterDiv) {
-            counterDiv = document.createElement('div');
-            counterDiv.id = 'processed-counter';
-            processedContainer.insertBefore(counterDiv, processedContainer.firstChild);
-        }
-        counterDiv.innerHTML = `Processed Frame: ${processedImageCounter}<br>Strength: ${details.strength}<br>Prompt: ${details.prompt}`;
-    
-        // Send the processed image to the server for saving
-
-        // Update the queue for saved images
-        // savedImageQueue.push(imageUrl);
-        // if (savedImageQueue.length > 20) {
-        //     savedImageQueue.shift(); // Keep only the 20 most recent images
         
-        // }    
+        // Check if processedOverlay exists before updating its content
+        // Update processed overlay content
+        let processedOverlay = document.getElementById('processed-overlay');
+        if (!processedOverlay) {
+            processedOverlay = document.createElement('div');
+            processedOverlay.id = 'processed-overlay';
+            processedOverlay.className = 'overlay';
+            processedContainer.insertBefore(processedOverlay, processedContainer.firstChild);
+        }
+        processedOverlay.innerHTML = `Processed Frame: ${processedImageCounter}<br>Strength: ${details.strength}<br>Prompt: ${details.prompt}`;
     }
 }
 
 
+
 //result image gallery
 // Fetch and display the image based on the slider's position
-document.getElementById('show-image-button').addEventListener('click', function() {
-    const slider = document.getElementById('image-slider');
-    const imageDisplayContainer = document.getElementById('image-display-container');
+// document.getElementById('show-image-button').addEventListener('click', function() {
+//     const slider = document.getElementById('image-slider');
+//     const imageDisplayContainer = document.getElementById('image-display-container');
 
-    fetch('http://localhost:3003/get-smallest-image-number')
-        .then(response => response.json())
-        .then(data => {
-            const smallestImageNumber = data.minNumber;
-            const adjustedImageIndex = parseInt(slider.value) + smallestImageNumber+1;
+//     fetch('http://localhost:3003/get-smallest-image-number')
+//         .then(response => response.json())
+//         .then(data => {
+//             const smallestImageNumber = data.minNumber;
+//             const adjustedImageIndex = parseInt(slider.value) + smallestImageNumber+1;
 
-            const imageUrl = `http://localhost:3003/saved_images/image_${adjustedImageIndex}.jpg`;
-            imageDisplayContainer.innerHTML = `<img src="${imageUrl}" alt="Saved Image" style="width: 100%; height: auto;">`;
-        })
-        .catch(error => {
-            console.error('Error:', error);
-            imageDisplayContainer.innerHTML = `<p>Error loading image.</p>`;
-        });
-});
+//             const imageUrl = `http://localhost:3003/saved_images/image_${adjustedImageIndex}.jpg`;
+//             imageDisplayContainer.innerHTML = `<img src="${imageUrl}" alt="Saved Image" style="width: 100%; height: auto;">`;
+//         })
+//         .catch(error => {
+//             console.error('Error:', error);
+//             imageDisplayContainer.innerHTML = `<p>Error loading image.</p>`;
+//         });
+// });
 
 // Add event listener for the image slider
 document.getElementById('image-slider').addEventListener('input', function() {
