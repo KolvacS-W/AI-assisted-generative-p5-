@@ -18,6 +18,13 @@ programmability of code and stylization ability of real time generative AI.
 ### Methods
 We are still developing and keep releasing the code! You can try these examples we updated:
 
+#### Main interface (in standard app folder): 
+A novel interface where artists can make full use of both the programmability of code and stylization ability of real time generative AI.
+Current functionalities: real-time stylization, configuration and result browsing for p5.js code:
+
+https://github.com/KolvacS-W/AI-assisted-generative-p5-/assets/55591358/4906bcfb-33d5-4bdc-be29-2ec3fe247645
+
+### P5.js library: Applying generative functions and pre-determined patterns in p5.js:
 [Shrinking particle guided by input masks](https://editor.p5js.org/wujiaq/sketches/pZSMb4Jxv)
 
 ![particle_shrink](https://github.com/KolvacS-W/AI-assisted-generative-p5-/assets/55591358/cb829cc9-3475-4f7c-a0c9-cca79b2d59e8)
