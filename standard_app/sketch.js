@@ -1,7 +1,7 @@
 let isProcessedFrameAvailable = false; // Flag to track if a new processed image is available
 let screenshotCounter = 0; // Counter for screenshot frames
 let processedImageCounter = 0; // Counter for processed images
-let blendindex = 1;
+
 document.getElementById('execute-btn').addEventListener('click', function() {
     // // Clear the imageQueue when the execute button is clicked
     // imageQueue = [];
@@ -84,6 +84,7 @@ async function compressImage(imageSrc, size) {
 const processedContainer = document.getElementById('processed-container');
 let imageQueue = [];
 let isImageBeingProcessed = false;
+let blendindex = 1;
 
 const ws = new WebSocket('ws://localhost:3003');
 
@@ -151,7 +152,6 @@ window.addEventListener('message', async function(event) {
         screenshotFrame.src = compressedImageSrc;
         screenshotImageUrls.push(compressedImageSrc); // Store the screenshot URL
 
-    
         // Update screenshot overlay content
         let screenshotOverlay = document.getElementById('screenshot-overlay');
         if (!screenshotOverlay) {
@@ -308,7 +308,6 @@ function connectWebSocket() {
                     //prepare for blending
                     processedImageUrls.push(imageUrl); // Store the processed image URL            
                     logImagePairs(blendindex); // Call the function to log image pairs
-                    blendindex+=1;
                 }
             });
     
@@ -319,18 +318,7 @@ function connectWebSocket() {
             console.error("Received data without image URLs");
         }
     };
-}
 
-// Function to log image pairs
-function logImagePairs(blendindex) {
-    i = blendindex
-    if (processedImageUrls[i - 1]) {
-        console.log(`Frame ${i}: Screenshot - ${screenshotImageUrls[i][10]}, Processed - ${processedImageUrls[i - 1][10]}`);
-        
-    }
-    else{
-        console.log('blendimage error')
-    }
 }
 
 // Initial WebSocket connection
@@ -347,6 +335,39 @@ function saveProcessedImage(imageUrl) {
 }
 
 // let savedImageQueue = [];
+
+// function newdisplayNextImage(imageUrl) {
+//     let processedFrame = document.getElementById('processed-frame');
+
+//     if (!processedFrame) {
+//         processedFrame = document.createElement('img');
+//         processedFrame.id = 'processed-frame';
+//         processedFrame.style.width = '400px';
+//         processedFrame.style.height = '400px';
+//         processedContainer.appendChild(processedFrame);
+//     }
+
+//     // Set the image source directly to display the image
+//     processedFrame.src = imageUrl;
+
+//     processedImageCounter++;
+//     let details = processedImageDetails.shift();
+
+//     // Check if processedOverlay exists before updating its content
+//     let processedOverlay = document.getElementById('processed-overlay');
+//     if (!processedOverlay) {
+//         processedOverlay = document.createElement('div');
+//         processedOverlay.id = 'processed-overlay';
+//         processedOverlay.className = 'overlay';
+//         processedContainer.insertBefore(processedOverlay, processedContainer.firstChild);
+//     }
+
+//     // Update the processed overlay content
+//     processedOverlay.innerHTML = `Processed Frame: ${processedImageCounter}<br>Strength: ${details.strength}<br>Prompt: ${details.prompt}`;
+
+//     console.log('displayed processed image: ' + processedImageCounter.toString());
+// }
+
 
 function displayNextImage() {
     if (imageQueue.length > 0) {
@@ -384,31 +405,21 @@ function displayNextImage() {
             processedContainer.insertBefore(processedOverlay, processedContainer.firstChild);
         }
         processedOverlay.innerHTML = `Processed Frame: ${processedImageCounter}<br>Strength: ${details.strength}<br>Prompt: ${details.prompt}`;
+    
     }
 }
 
-
-
-//result image gallery
-// Fetch and display the image based on the slider's position
-// document.getElementById('show-image-button').addEventListener('click', function() {
-//     const slider = document.getElementById('image-slider');
-//     const imageDisplayContainer = document.getElementById('image-display-container');
-
-//     fetch('http://localhost:3003/get-smallest-image-number')
-//         .then(response => response.json())
-//         .then(data => {
-//             const smallestImageNumber = data.minNumber;
-//             const adjustedImageIndex = parseInt(slider.value) + smallestImageNumber+1;
-
-//             const imageUrl = `http://localhost:3003/saved_images/image_${adjustedImageIndex}.jpg`;
-//             imageDisplayContainer.innerHTML = `<img src="${imageUrl}" alt="Saved Image" style="width: 100%; height: auto;">`;
-//         })
-//         .catch(error => {
-//             console.error('Error:', error);
-//             imageDisplayContainer.innerHTML = `<p>Error loading image.</p>`;
-//         });
-// });
+// Function to log image pairs
+function logImagePairs(blendindex) {
+    i = blendindex
+    if (processedImageUrls[i - 1]) {
+        console.log(`Frame ${i}: Screenshot - ${screenshotImageUrls[i][10]}, Processed - ${processedImageUrls[i - 1][10]}`);
+        
+    }
+    else{
+        console.log('blendimage error')
+    }
+}
 
 // Add event listener for the image slider
 document.getElementById('image-slider').addEventListener('input', function() {
