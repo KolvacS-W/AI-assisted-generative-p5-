@@ -19,6 +19,8 @@ programmability of code and stylization ability of real time generative AI.
 We are still developing and keep releasing the code! You can try these examples we updated:
 
 #### Main interface (in standard app folder): 
+demo p5.js art from: [Recursive Tree by Poersch](https://openprocessing.org/sketch/90192)
+
 A novel interface where artists can make full use of both the programmability of code and stylization ability of real time generative AI.
 Current functionalities: real-time stylization, configuration and result browsing for p5.js code:
 
