@@ -2,6 +2,8 @@ let isProcessedFrameAvailable = false; // Flag to track if a new processed image
 let screenshotCounter = 0; // Counter for screenshot frames
 let processedImageCounter = 0; // Counter for processed images
 let blendindex = 1;
+let firstservercall = true;
+
 document.getElementById('execute-btn').addEventListener('click', function() {
     // // Clear the imageQueue when the execute button is clicked
     // imageQueue = [];
@@ -161,15 +163,21 @@ window.addEventListener('message', async function(event) {
             screenshotContainer.insertBefore(screenshotOverlay, screenshotContainer.firstChild);
         }
         screenshotOverlay.textContent = `Frame: ${screenshotCounter}`;
-    
-        sendImageToServer(compressedImageSrc);
+        
+        //first call
+        if (firstservercall) {
+            console.log('first call')
+            sendImageToServer(compressedImageSrc);
+            firstservercall = false;
+        }
+        // sendImageToServer(compressedImageSrc);
     }
     
 });
 
 // Variables to store the current strength and prompt values
-let currentStrength = 0.6; // Default value
-let currentPrompt = "digital cyberpunk tree"; // Default value
+let currentStrength = 0.49; // Default value
+let currentPrompt = "tree made of yarn"; // Default value
 
 // Create UI elements for strength slider, prompt input, and update button
 const controlsContainer = document.getElementById('controls-container');
@@ -183,7 +191,7 @@ const strengthSlider = document.createElement('input');
 strengthSlider.type = 'range';
 strengthSlider.min = '0';
 strengthSlider.max = '1';
-strengthSlider.step = '0.1';
+strengthSlider.step = '0.01';
 strengthSlider.value = currentStrength;
 controlsContainer.appendChild(strengthSlider);
 
@@ -322,7 +330,7 @@ function connectWebSocket() {
 }
 
 
-let overlayTransparency = 0.5; // Default transparency
+// let overlayTransparency = 0.7; // Default transparency
 
 // Function to create a concatenated image and update the blend-container
 function createAndDisplayConcatenatedImage(screenshotUrl, processedUrl, transparency) {
@@ -348,11 +356,14 @@ function createAndDisplayConcatenatedImage(screenshotUrl, processedUrl, transpar
 
         img2.onload = () => {
             // Draw the second image (processed) with specified transparency
-            ctx.globalAlpha = transparency;
+            ctx.globalAlpha = 0.4;
             ctx.drawImage(img2, 0, 0, img1.width, img1.height);  // Resize to match the first image
 
             try {
                 updateBlendContainer(canvas.toDataURL('image/jpeg'));
+                if (isCapturing){
+                    sendImageToServer(canvas.toDataURL('image/jpeg'));
+                }
             } catch (e) {
                 console.error("Error creating data URL:", e);
             }
@@ -375,7 +386,7 @@ function logImagePairs(blendindex) {
         console.log(`Frame ${blendindex}:`);
 
         // Create and display concatenated image
-        createAndDisplayConcatenatedImage(screenshotImageUrls[blendindex], processedImageUrls[blendindex - 1], 0.6);
+        createAndDisplayConcatenatedImage(screenshotImageUrls[blendindex], processedImageUrls[blendindex - 1], 0.3);
     } else {
         console.log('Blend image error');
     }
