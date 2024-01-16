@@ -322,9 +322,10 @@ function connectWebSocket() {
 }
 
 
+let overlayTransparency = 0.5; // Default transparency
 
 // Function to create a concatenated image and update the blend-container
-function createAndDisplayConcatenatedImage(screenshotUrl, processedUrl) {
+function createAndDisplayConcatenatedImage(screenshotUrl, processedUrl, transparency) {
     const canvas = document.createElement('canvas');
     const ctx = canvas.getContext('2d');
     const img1 = new Image();
@@ -338,13 +339,20 @@ function createAndDisplayConcatenatedImage(screenshotUrl, processedUrl) {
     img2.src = processedUrl;
 
     img1.onload = () => {
-        canvas.width = img1.width * 2; // Assuming both images have the same width
-        canvas.height = img1.height;    // Assuming both images have the same height
-        ctx.drawImage(img1, 0, 0);      // Draw the screenshot image
+        canvas.width = img1.width;
+        canvas.height = img1.height;
+
+        // Draw the first image (screenshot) with full opacity
+        ctx.globalAlpha = 1;
+        ctx.drawImage(img1, 0, 0);
+
         img2.onload = () => {
-            ctx.drawImage(img2, img1.width, 0); // Draw the processed image next to the screenshot
+            // Draw the second image (processed) with specified transparency
+            ctx.globalAlpha = transparency;
+            ctx.drawImage(img2, 0, 0, img1.width, img1.height);  // Resize to match the first image
+
             try {
-                updateBlendContainer(canvas.toDataURL('image/jpeg')); // Update the blend-container with the new image
+                updateBlendContainer(canvas.toDataURL('image/jpeg'));
             } catch (e) {
                 console.error("Error creating data URL:", e);
             }
@@ -358,7 +366,7 @@ function createAndDisplayConcatenatedImage(screenshotUrl, processedUrl) {
 // Function to update the blend-container with the new concatenated image
 function updateBlendContainer(concatenatedImageUrl) {
     const blendContainer = document.getElementById('blend-container');
-    blendContainer.innerHTML = `<img src="${concatenatedImageUrl}" style="width: 100%; height: auto;">`;
+    blendContainer.innerHTML = `<img src="${concatenatedImageUrl}" style="width: 400px; height: auto;">`;  // Set size to match screenshot
 }
 
 // Function to log image pairs and create a concatenated image
@@ -367,7 +375,7 @@ function logImagePairs(blendindex) {
         console.log(`Frame ${blendindex}:`);
 
         // Create and display concatenated image
-        createAndDisplayConcatenatedImage(screenshotImageUrls[blendindex], processedImageUrls[blendindex - 1]);
+        createAndDisplayConcatenatedImage(screenshotImageUrls[blendindex], processedImageUrls[blendindex - 1], 0.6);
     } else {
         console.log('Blend image error');
     }
