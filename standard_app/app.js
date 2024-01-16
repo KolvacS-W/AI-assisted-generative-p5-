@@ -321,15 +321,55 @@ function connectWebSocket() {
     };
 }
 
-// Function to log image pairs
+
+
+// Function to create a concatenated image and update the blend-container
+function createAndDisplayConcatenatedImage(screenshotUrl, processedUrl) {
+    const canvas = document.createElement('canvas');
+    const ctx = canvas.getContext('2d');
+    const img1 = new Image();
+    const img2 = new Image();
+
+    // Set crossOrigin to anonymous to request CORS-safe images
+    img1.crossOrigin = "anonymous";
+    img2.crossOrigin = "anonymous";
+
+    img1.src = screenshotUrl;
+    img2.src = processedUrl;
+
+    img1.onload = () => {
+        canvas.width = img1.width * 2; // Assuming both images have the same width
+        canvas.height = img1.height;    // Assuming both images have the same height
+        ctx.drawImage(img1, 0, 0);      // Draw the screenshot image
+        img2.onload = () => {
+            ctx.drawImage(img2, img1.width, 0); // Draw the processed image next to the screenshot
+            try {
+                updateBlendContainer(canvas.toDataURL('image/jpeg')); // Update the blend-container with the new image
+            } catch (e) {
+                console.error("Error creating data URL:", e);
+            }
+        };
+        img2.onerror = () => console.error('Error loading the processed image');
+    };
+    img1.onerror = () => console.error('Error loading the screenshot image');
+}
+
+
+// Function to update the blend-container with the new concatenated image
+function updateBlendContainer(concatenatedImageUrl) {
+    const blendContainer = document.getElementById('blend-container');
+    blendContainer.innerHTML = `<img src="${concatenatedImageUrl}" style="width: 100%; height: auto;">`;
+}
+
+// Function to log image pairs and create a concatenated image
 function logImagePairs(blendindex) {
-    i = blendindex
-    if (processedImageUrls[i - 1]) {
-        console.log(`Frame ${i}: Screenshot - ${screenshotImageUrls[i][10]}, Processed - ${processedImageUrls[i - 1][10]}`);
-        
-    }
-    else{
-        console.log('blendimage error')
+    if (processedImageUrls[blendindex - 1]) {
+        console.log(`Frame ${blendindex}:`);
+
+        // Create and display concatenated image
+        createAndDisplayConcatenatedImage(screenshotImageUrls[blendindex], processedImageUrls[blendindex - 1]);
+    } else {
+        console.log('Blend image error');
     }
 }
 
