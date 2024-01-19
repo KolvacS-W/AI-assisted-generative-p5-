@@ -171,7 +171,7 @@ window.addEventListener('message', async function(event) {
 
         // Handle and display the block image
         if (event.data.blockImage) {
-            const blockImageSrc = event.data.blockImage;
+            const blockImageSrc = await compressImage(event.data.blockImage, 448);
             blockImageUrls.push(blockImageSrc);
             displayBlockImage(blockImageSrc, screenshotCounter);
         }
@@ -310,21 +310,26 @@ window.onload = function() {
 // Array to store details for each processed image
 let processedImageDetails = [];
 
-function sendImageToServer(imageSrc, maskSrc) {
+function sendImageToServer(imageSrc, maskUrl) {
+    // Print out the URL and size of the mask image
+    if (maskUrl) {
+        const img = new Image();
+        img.onload = function() {
+            // console.log(`Mask URL: ${maskUrl}`);
+            console.log(`Mask Size: ${img.width}x${img.height}`);
+        };
+        img.src = maskUrl;
+    }
+
     if (ws.readyState === WebSocket.OPEN) {
         // Store details for the processed image
         processedImageDetails.push({
             strength: currentStrength,
-            prompt: currentPrompt
+            prompt: currentPrompt,
+            mask_url: maskUrl // Adding mask URL as a parameter
         });
 
-        // Send data to the server, including the mask URL
-        ws.send(JSON.stringify({ 
-            image_url: imageSrc, 
-            prompt: currentPrompt, 
-            strength: currentStrength,
-            mask_url: maskSrc // Include the mask URL
-        }));
+        ws.send(JSON.stringify({ image_url: imageSrc, prompt: currentPrompt, strength: currentStrength, mask_url: maskUrl }));
     } else {
         console.error('WebSocket is not open. Current state:', ws.readyState);
     }
