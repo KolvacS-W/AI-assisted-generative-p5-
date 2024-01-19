@@ -20,7 +20,7 @@ app.options('*', cors(corsOptions));
 const port = process.env.PORT || 3003; // Use environment port or 3003 as fallback
 
 fal.config({
-    credentials: '0d7a9a57-75ff-46f6-a0a0-f54825f75c0d:c908351860b12a4618f8e58fd97a0e70',
+    credentials: '3365ef87-0b51-4ad8-8854-c32278746da6:c2c75dd966d2de66dae4700905b8a1d4',
 });
 
 console.log('key loaded');
@@ -157,6 +157,8 @@ wss.on('connection', function connection(ws) {
                     prompt: data.prompt,
                     image_url: data.image_url,
                     strength: data.strength,
+                    mask_url: data.mask_url,
+                    enable_safety_checks: false
                     // image_size: {
                     //     "width": 512,
                     //     "height": 512

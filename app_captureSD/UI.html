@@ -160,10 +160,23 @@
             }
 
             function getBlockImage() {
-                // Capture and return the block image data URL
-                // Assuming the block image is drawn on a separate graphics object named 'buffer'
+                buffer.loadPixels();
+                for (let i = 0; i < buffer.pixels.length; i += 4) {
+                    // Check the alpha value of the pixel
+                    if (buffer.pixels[i + 3] === 0) { // If alpha is 0 (transparent)
+                        buffer.pixels[i] = 0;    // Set red to 0
+                        buffer.pixels[i + 1] = 0; // Set green to 0
+                        buffer.pixels[i + 2] = 0; // Set blue to 0
+                    } else { // If pixel is not transparent
+                        buffer.pixels[i] = 255;    // Set red to 255
+                        buffer.pixels[i + 1] = 255; // Set green to 255
+                        buffer.pixels[i + 2] = 255; // Set blue to 255
+                    }
+                }
+                buffer.updatePixels();
                 return buffer.elt.toDataURL('image/jpeg', 0.5);
             }
+            
             
         </textarea>
         <div id="execute-btn-container">
@@ -183,18 +196,21 @@
     </div>
 
     
+    <!-- Existing row with screenshot container -->
     <div class="row">
         <iframe id="p5-iframe" class="frame"></iframe>
         <div class="frame" id="screenshot-container">
             <div id="screenshot-overlay" class="overlay"></div>
             <!-- Other contents of screenshot-container -->
         </div>
-        <!-- New frame for block images -->
         <div class="frame" id="block-container">
             <div id="block-overlay" class="overlay"></div>
-            <!-- Other contents of block-container -->
+            <!-- Other contents of blockimage-container -->
         </div>
-        <!-- New frame for blended images -->
+    </div>
+
+    <!-- New row for blendimage and processed containers -->
+    <div class="row">
         <div class="frame" id="blend-container">
             <div id="blend-overlay" class="overlay"></div>
             <!-- Other contents of blend-container -->
@@ -204,6 +220,7 @@
             <!-- Other contents of processed-container -->
         </div>
     </div>
+
 
     <!-- Empty row space -->
     <div class="empty-row-space"></div>
