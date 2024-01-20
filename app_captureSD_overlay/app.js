@@ -146,7 +146,7 @@ window.addEventListener('message', async function(event) {
         screenshotCounter++;
         let screenshotFrame = document.getElementById('screenshot-frame');
         const screenshotContainer = document.getElementById('screenshot-container');
-        const compressedImageSrc = await compressImage(event.data.screenshot, 224);
+        const compressedImageSrc = await compressImage(event.data.screenshot, 448);
     
         if (!screenshotFrame) {
             screenshotFrame = document.createElement('img');
@@ -171,7 +171,7 @@ window.addEventListener('message', async function(event) {
 
         // Handle and display the block image
         if (event.data.blockImage) {
-            const blockImageSrc = await compressImage(event.data.blockImage, 224);
+            const blockImageSrc = await compressImage(event.data.blockImage, 448);
             blockImageUrls.push(blockImageSrc);
             displayBlockImage(blockImageSrc, screenshotCounter);
             sendImageToServer(blockImageSrc, blockImageUrls[0]);
@@ -214,7 +214,7 @@ function displayBlockImage(imageSrc, frameNumber) {
 }
 
 // Variables to store the current strength and prompt values
-let currentStrength = 0.8; // Default value
+let currentStrength = 0.65; // Default value
 let currentPrompt = "watercolor paint drops"; // Default value
 
 // Create UI elements for strength slider, prompt input, and update button
@@ -361,7 +361,7 @@ function connectWebSocket() {
                     imageQueue.push(image.url);
                     //save images as they come
                     let imageUrl = imageQueue[0];
-                    saveProcessedImage(imageUrl);
+                    // saveProcessedImage(imageUrl);
                     //prepare for blending
                     processedImageUrls.push(imageUrl); // Store the processed image URL            
                     // logImagePairs(blendindex); // Call the function to log image pairs
@@ -444,6 +444,64 @@ function logImagePairs(blendindex) {
 // Initial WebSocket connection
 connectWebSocket();
 
+
+// New function to create and display the final image
+function createAndDisplayFinalImage(screenshotUrl, processedUrl, frameNumber) {
+    const finalCanvas = document.createElement('canvas');
+    const ctx = finalCanvas.getContext('2d');
+    const img1 = new Image();
+    const img2 = new Image();
+
+    img1.crossOrigin = "anonymous";
+    img2.crossOrigin = "anonymous";
+
+    img1.src = screenshotUrl;
+    img2.src = processedUrl;
+
+    img1.onload = () => {
+        finalCanvas.width = img1.width;
+        finalCanvas.height = img1.height;
+        
+        // Draw the screenshot
+        ctx.drawImage(img1, 0, 0);
+
+        img2.onload = () => {
+            const processedCanvas = document.createElement('canvas');
+            const processedCtx = processedCanvas.getContext('2d');
+            processedCanvas.width = img2.width;
+            processedCanvas.height = img2.height;
+            processedCtx.drawImage(img2, 0, 0);
+
+            // Segmenting the processed image to keep non-black parts
+            const imageData = processedCtx.getImageData(0, 0, processedCanvas.width, processedCanvas.height);
+            const threshold = 50; // Threshold for black detection; can be adjusted
+
+            for (let i = 0; i < imageData.data.length; i += 4) {
+                if (imageData.data[i] < threshold && imageData.data[i + 1] < threshold && imageData.data[i + 2] < threshold) {
+                    imageData.data[i + 3] = 0; // Set alpha to 0 (transparent)
+                }
+            }
+            processedCtx.putImageData(imageData, 0, 0);
+
+            // Overlay the processed (segmented) image
+            ctx.drawImage(processedCanvas, 0, 0);
+
+            updateFinalImageContainer(finalCanvas.toDataURL('image/jpeg'), frameNumber);
+            saveProcessedImage(finalCanvas.toDataURL('image/jpeg'));
+        };
+        img2.onerror = () => console.error('Error loading the processed image');
+    };
+    img1.onerror = () => console.error('Error loading the screenshot image');
+}
+
+// Function to update the final image container
+function updateFinalImageContainer(finalImageUrl, frameNumber) {
+    const finalImageContainer = document.getElementById('final-image-container');
+    finalImageContainer.innerHTML = `<img src="${finalImageUrl}" style="width: 400px; height: auto;">
+                                     <div class="overlay">Final Image Frame: ${frameNumber}</div>`;
+}
+
+
 function saveProcessedImage(imageUrl) {
     fetch('http://localhost:3003/save-image', {  // Use the correct server URL
         method: 'POST',
@@ -481,6 +539,10 @@ function displayNextImage() {
 
         processedImageCounter++;
         let details = processedImageDetails.shift();
+
+        // After updating the processed image, also update the final image
+        createAndDisplayFinalImage(screenshotImageUrls[processedImageCounter - 1], processedImageUrls[processedImageCounter - 1], processedImageCounter);
+
         
         // Check if processedOverlay exists before updating its content
         // Update processed overlay content

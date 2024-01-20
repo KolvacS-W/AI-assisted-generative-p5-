@@ -158,7 +158,8 @@ wss.on('connection', function connection(ws) {
                     image_url: data.image_url,
                     strength: data.strength,
                     // mask_url: data.mask_url,
-                    enable_safety_checks: false
+                    enable_safety_checks: false,
+                    seed: 12248
                     // image_size: {
                     //     "width": 512,
                     //     "height": 512
