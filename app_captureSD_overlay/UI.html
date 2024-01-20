@@ -120,53 +120,54 @@
             let buffer;
             
             function setup() {
-              createCanvas(400, 400);
-              buffer = createGraphics(400, 400);
+                createCanvas(400, 400);
+                buffer = createGraphics(400, 400);
             }
             
             function draw() {
-              background('yellow');
+                background('bisque');
             
-              // Moving ellipse outside captureAndSave (horizontal movement)
-              fill(0, 255, 0);
-              ellipse((frameCount % width), 50, 80, 80); // Horizontal movement
+                // Moving ellipse outside captureAndSave (horizontal movement)
+                fill(0, 255, 0);
+                ellipse((frameCount % width), 50, 80, 80); // Horizontal movement
             
-              // Start block for captureAndSave
-              startblock(0, 0, 400, 400, 'output.png', 0.5);
+                // Start block 
             
-              // Drawings for captureAndSave
-              buffer.fill(255, 0, 0);
-              buffer.ellipse(200, (frameCount % buffer.height), 100, 100); // Vertical movement within buffer
+                buffer.fill(255, 0, 0);
+                buffer.ellipse(200, (frameCount % buffer.height), 100, 100); // Vertical movement within buffer
 
-              buffer.fill('purple');
-              buffer.ellipse(200, (frameCount % buffer.height*2), 100, 100); // Vertical movement within buffer
+                buffer.fill('purple');
+                buffer.ellipse(200, (frameCount % buffer.height * 2), 100, 100); // Vertical movement within buffer
             
-              // End block for captureAndSave
-              endblock(0, 0, 400, 400, 'output.png', 0.5);
+                // End block
             
-              // Draw the buffer onto the canvas
-              image(buffer, 0, 0);
+                // Commented out the line that draws the buffer to the main canvas
+                // image(buffer, 0, 0);
             
-              fill('pink');
-              ellipse(60, 40, 70, 80); // Static ellipse outside captureAndSave
+                fill('pink');
+                ellipse(60, 40, 70, 80); // Static ellipse outside captureAndSave
             }
             
-            function startblock(x1, y1, x2, y2, filename, fps) {
-              buffer.clear();
-            }
-            
-            function endblock(x1, y1, x2, y2, filename, fps) {
-
-            }
 
             function getBlockImage() {
-                // Capture and return the block image data URL
-                // Assuming the block image is drawn on a separate graphics object named 'buffer'
+                // Capture and return the block image data URL from the buffer
                 return buffer.elt.toDataURL('image/jpeg', 0.5);
             }
+
+            function getOutBlockImage() {
+                // Temporarily hide buffer content
+                buffer.hide();
             
+                // Capture the main canvas excluding the buffer content
+                let outBlockImage = canvas.toDataURL('image/jpeg', 0.5);
             
+                // Show buffer content again
+                buffer.show();
+            
+                return outBlockImage;
+            }
         </textarea>
+        
         <div id="execute-btn-container">
             <div id="controls-container">
                 <!-- Controls will be added by app.js -->

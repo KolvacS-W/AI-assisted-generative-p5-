@@ -20,7 +20,7 @@ document.getElementById('execute-btn').addEventListener('click', function() {
                 (function() {
                     const userSketch = (function() {
                         ${userCode}
-                        return { setup, draw, getBlockImage };
+                        return { setup, draw, getBlockImage, getOutBlockImage };
                     })();
 
                     window.setup = function() {
@@ -45,7 +45,8 @@ document.getElementById('execute-btn').addEventListener('click', function() {
                         // Send both the screenshot and block image
                         window.parent.postMessage({
                             screenshot: canvas.toDataURL('image/jpeg', 0.5),
-                            blockImage: userSketch.getBlockImage() // This will get the block image from p5.js
+                            blockImage: userSketch.getBlockImage(), // This will get the block image from p5.js
+                            outBlockImage: userSketch.getOutBlockImage(), // This will get the out block image from p5.js
                         }, '*');
                     }
                 })();
@@ -155,8 +156,12 @@ window.addEventListener('message', async function(event) {
             screenshotFrame.style.height = '400px';
             screenshotContainer.appendChild(screenshotFrame);
         }
-        screenshotFrame.src = compressedImageSrc;
-        screenshotImageUrls.push(compressedImageSrc); // Store the screenshot URL
+        // screenshotFrame.src = compressedImageSrc;
+        // screenshotImageUrls.push(compressedImageSrc); // Store the screenshot URL
+
+        const outBlockImageSrc = await compressImage(event.data.outBlockImage, 448);
+        screenshotFrame.src = outBlockImageSrc;
+        screenshotImageUrls.push(outBlockImageSrc); // Replace screenshot URL with out block image URL
 
     
         // Update screenshot overlay content
