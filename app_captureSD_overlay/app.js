@@ -452,6 +452,7 @@ function logImagePairs(blendindex) {
 // Initial WebSocket connection
 connectWebSocket();
 
+let finalImageQueue = []; // Queue for final images
 
 function createAndDisplayFinalImage(screenshotUrl, processedUrl, frameNumber) {
     const finalCanvas = document.createElement('canvas');
@@ -501,7 +502,9 @@ function createAndDisplayFinalImage(screenshotUrl, processedUrl, frameNumber) {
 
             ctx.drawImage(processedCanvas, 0, 0);
 
-            updateFinalImageContainer(finalCanvas.toDataURL('image/jpeg'), frameNumber);
+            // updateFinalImageContainer(finalCanvas.toDataURL('image/jpeg'), frameNumber);
+            const finalImageUrl = finalCanvas.toDataURL('image/jpeg');
+            finalImageQueue.push({ url: finalImageUrl, frameNumber: frameNumber }); // Store URL with frame number
             saveProcessedImage(finalCanvas.toDataURL('image/jpeg'));
         };
         img2.onerror = () => console.error('Error loading the processed image');
@@ -533,11 +536,13 @@ function findMostFrequentColor(imageData) {
 
 
 // Function to update the final image container
-function updateFinalImageContainer(finalImageUrl, frameNumber) {
-    const finalImageContainer = document.getElementById('final-image-container');
-    finalImageContainer.innerHTML = `<img src="${finalImageUrl}" style="width: 400px; height: auto;">
-                                     <div class="overlay">Final Image Frame: ${frameNumber}</div>`;
-}
+// function updateFinalImageContainer(finalImageUrl, frameNumber) {
+//     const finalImageContainer = document.getElementById('final-image-container');
+//     // Replace the innerHTML with the new image and overlay
+//     finalImageContainer.innerHTML = `<img src="${finalImageUrl}" style="width: 400px; height: auto;">
+//                                      <div class="overlay">Final Image Frame: ${frameNumber}</div>`;
+// }
+
 
 
 function saveProcessedImage(imageUrl) {
@@ -551,6 +556,40 @@ function saveProcessedImage(imageUrl) {
 }
 
 // let savedImageQueue = [];
+
+function displayNextFinalImage() {
+    if (finalImageQueue.length > 0) {
+        const finalImageInfo = finalImageQueue.shift(); // Get the next image info
+
+        const finalImage = new Image();
+        finalImage.onload = () => {
+            const finalImageContainer = document.getElementById('final-image-container');
+            finalImage.style.width = '400px';
+            finalImage.style.height = '400px';
+
+            const overlay = createOverlay(finalImageInfo.frameNumber);
+
+            finalImageContainer.innerHTML = ''; // Clear the container
+            finalImageContainer.appendChild(finalImage);
+            finalImageContainer.appendChild(overlay); // Add the overlay
+        };
+        finalImage.src = finalImageInfo.url; // Start loading the image
+    }
+}
+
+function createOverlay(frameNumber) {
+    const overlay = document.createElement('div');
+    overlay.className = 'overlay';
+    overlay.textContent = `Final Image Frame: ${frameNumber}`;
+    overlay.style.position = 'absolute';
+    overlay.style.bottom = '10px';
+    overlay.style.left = '10px';
+    overlay.style.color = 'white';
+    overlay.style.backgroundColor = 'rgba(0, 0, 0, 0)'; // Transparent background
+    overlay.style.padding = '5px';
+    return overlay;
+}
+
 
 function displayNextImage() {
     if (imageQueue.length > 0) {
@@ -592,6 +631,10 @@ function displayNextImage() {
             processedContainer.insertBefore(processedOverlay, processedContainer.firstChild);
         }
         processedOverlay.innerHTML = `Processed Frame: ${processedImageCounter}<br>Strength: ${details.strength}<br>Prompt: ${details.prompt}`;
+    
+        // After displaying the next processed image,
+        // also display the next final image
+        displayNextFinalImage();
     }
 }
 
