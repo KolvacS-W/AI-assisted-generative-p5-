@@ -119,14 +119,23 @@
             let lastCaptureTime = 0;
             let buffer;
             
+            // Global variable for background color
+            let bgColor = 'wheat'; // default background color
+            
+
             function setup() {
                 createCanvas(400, 400);
+                // Attach bgColor to the window object to make it globally accessible
                 buffer = createGraphics(400, 400);
+
+
             }
-            
+
             function draw() {
-                background('bisque');
-            
+                
+                background(bgColor);
+                buffer.background(bgColor); // Correctly set buffer background
+
                 // Moving ellipse outside captureAndSave (horizontal movement)
                 fill(0, 255, 0);
                 ellipse((frameCount % width), 50, 80, 80); // Horizontal movement
@@ -231,7 +240,7 @@
     </div>
 
     <!-- Load Main App Script -->
-    <script src="app.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/browser-image-compression/1.0.14/browser-image-compression.min.js"></script>
+    <script src="app.js"></script>    
 </body>
 </html>

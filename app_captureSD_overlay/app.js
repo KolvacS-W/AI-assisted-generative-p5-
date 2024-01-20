@@ -20,7 +20,7 @@ document.getElementById('execute-btn').addEventListener('click', function() {
                 (function() {
                     const userSketch = (function() {
                         ${userCode}
-                        return { setup, draw, getBlockImage, getOutBlockImage };
+                        return { setup, draw, getBlockImage, getOutBlockImage};
                     })();
 
                     window.setup = function() {
@@ -181,6 +181,9 @@ window.addEventListener('message', async function(event) {
             displayBlockImage(blockImageSrc, screenshotCounter);
             sendImageToServer(blockImageSrc, blockImageUrls[0]);
         }
+
+        // Store the background color
+        let backgroundColor = event.data.bgColor || { r: 255, g: 255, b: 255 };
 
         //first call
         // if (firstservercall) {
@@ -450,7 +453,6 @@ function logImagePairs(blendindex) {
 connectWebSocket();
 
 
-// New function to create and display the final image
 function createAndDisplayFinalImage(screenshotUrl, processedUrl, frameNumber) {
     const finalCanvas = document.createElement('canvas');
     const ctx = finalCanvas.getContext('2d');
@@ -466,8 +468,7 @@ function createAndDisplayFinalImage(screenshotUrl, processedUrl, frameNumber) {
     img1.onload = () => {
         finalCanvas.width = img1.width;
         finalCanvas.height = img1.height;
-        
-        // Draw the screenshot
+
         ctx.drawImage(img1, 0, 0);
 
         img2.onload = () => {
@@ -477,18 +478,27 @@ function createAndDisplayFinalImage(screenshotUrl, processedUrl, frameNumber) {
             processedCanvas.height = img2.height;
             processedCtx.drawImage(img2, 0, 0);
 
-            // Segmenting the processed image to keep non-black parts
             const imageData = processedCtx.getImageData(0, 0, processedCanvas.width, processedCanvas.height);
-            const threshold = 50; // Threshold for black detection; can be adjusted
+            const backgroundColor = findMostFrequentColor(imageData);
+
+            const colorThreshold = 30; // Threshold for color distance; can be adjusted
 
             for (let i = 0; i < imageData.data.length; i += 4) {
-                if (imageData.data[i] < threshold && imageData.data[i + 1] < threshold && imageData.data[i + 2] < threshold) {
-                    imageData.data[i + 3] = 0; // Set alpha to 0 (transparent)
+                let r = imageData.data[i];
+                let g = imageData.data[i + 1];
+                let b = imageData.data[i + 2];
+                let distance = Math.sqrt(
+                    (r - backgroundColor.r) ** 2 +
+                    (g - backgroundColor.g) ** 2 +
+                    (b - backgroundColor.b) ** 2
+                );
+
+                if (distance <= colorThreshold) {
+                    imageData.data[i + 3] = 0;
                 }
             }
             processedCtx.putImageData(imageData, 0, 0);
 
-            // Overlay the processed (segmented) image
             ctx.drawImage(processedCanvas, 0, 0);
 
             updateFinalImageContainer(finalCanvas.toDataURL('image/jpeg'), frameNumber);
@@ -498,6 +508,29 @@ function createAndDisplayFinalImage(screenshotUrl, processedUrl, frameNumber) {
     };
     img1.onerror = () => console.error('Error loading the screenshot image');
 }
+
+function findMostFrequentColor(imageData) {
+    let colorCount = {};
+    let maxCount = 0;
+    let dominantColor = { r: 0, g: 0, b: 0 };
+
+    for (let i = 0; i < imageData.data.length; i += 4) {
+        let r = imageData.data[i];
+        let g = imageData.data[i + 1];
+        let b = imageData.data[i + 2];
+        let rgbString = `${r},${g},${b}`;
+
+        colorCount[rgbString] = (colorCount[rgbString] || 0) + 1;
+
+        if (colorCount[rgbString] > maxCount) {
+            maxCount = colorCount[rgbString];
+            dominantColor = { r, g, b };
+        }
+    }
+
+    return dominantColor;
+}
+
 
 // Function to update the final image container
 function updateFinalImageContainer(finalImageUrl, frameNumber) {
