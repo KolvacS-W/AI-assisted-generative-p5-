@@ -19,7 +19,7 @@ programmability of code and stylization ability of real time generative AI.
 We are still developing and keep releasing the code! You can try these examples we updated:
 
 #### (01/20/2024)Updated Main interface (in app_captureSD_overlay folder): 
-demo p5.js art from: [Cloudy_v2_20220123 by SamuelYAN]([https://openprocessing.org/sketch/90192](https://openprocessing.org/sketch/1452002))
+demo p5.js art from: [Cloudy_v2_20220123 by SamuelYAN](https://openprocessing.org/sketch/1452002)
 
 We updated the interface, enabling user to stylize anything in p5 in real time. Simply specifying in p5.js code, certain elements will be stylized with tunable parameters
 
