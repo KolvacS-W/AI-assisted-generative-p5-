@@ -4,7 +4,7 @@ class GenP5 {
         this.blockImageCounter = 0;
         this.processedImageCounter = 0;
         this.finalImageCounter = 0;
-        this.currentStrength = 0.8; // Default strength
+        this.currentStrength = 0.75; // Default strength
         this.currentPrompt = "watercolor paint drops"; // Default prompt
         this.resize = resize; // Size to which images should be resized
 

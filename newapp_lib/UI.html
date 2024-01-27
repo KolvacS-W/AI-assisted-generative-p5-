@@ -6,11 +6,13 @@
     <title>p5.js with GenP5 Library</title>
     <style>
         .container {
-            width: 224px;
-            height: 224px;
+            width: 400px;
+            height: 400px;
             position: relative;
             border: 1px solid #ccc;
             margin-bottom: 20px;
+            display: inline-block; /* Allow side-by-side display */
+            margin-right: 10px; /* Add space between containers */
         }
         .overlay {
             position: absolute;
@@ -21,13 +23,30 @@
             color: #fff;
             text-align: center;
         }
+        .row {
+            margin-bottom: 20px; /* Add space between rows */
+        }
+        button {
+            margin-bottom: 20px;
+        }
     </style>
 </head>
 <body>
-    <div id="screenshot-container" class="container"></div>
-    <div id="block-container" class="container"></div>
-    <div id="processed-container" class="container"></div>
-    <div id="final-container" class="container"></div>
+    <div class="row">
+        <!-- P5 canvas placeholder, it will be created by p5.js -->
+        <div id="p5-canvas" class="container"></div>
+        <button id="start-stop-btn">Start</button>
+    </div>
+
+    <div class="row">
+        <div id="screenshot-container" class="container"></div>
+        <div id="block-container" class="container"></div>
+        <div id="processed-container" class="container"></div>
+    </div>
+
+    <div class="row">
+        <div id="final-container" class="container"></div>
+    </div>
 
     <script src="genp5lib.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.4.0/p5.js"></script>
