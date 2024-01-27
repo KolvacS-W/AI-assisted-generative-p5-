@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>p5.js with GenP5 Library</title>
+    <style>
+        .container {
+            width: 224px;
+            height: 224px;
+            position: relative;
+            border: 1px solid #ccc;
+            margin-bottom: 20px;
+        }
+        .overlay {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            color: #fff;
+            text-align: center;
+        }
+    </style>
+</head>
+<body>
+    <div id="screenshot-container" class="container"></div>
+    <div id="block-container" class="container"></div>
+    <div id="processed-container" class="container"></div>
+    <div id="final-container" class="container"></div>
+
+    <script src="genp5lib.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.4.0/p5.js"></script>
+    <script src="sketch.js"></script>
+</body>
+</html>
