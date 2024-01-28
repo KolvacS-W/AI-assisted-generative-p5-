@@ -1,5 +1,5 @@
 class GenP5 {
-    constructor(resize = 224) { // Default resize parameter set to 224
+    constructor(resize = 448) { // Default resize parameter set to 224
         this.screenshotCounter = 0;
         this.blockImageCounter = 0;
         this.processedImageCounter = 0;
@@ -95,11 +95,32 @@ class GenP5 {
         };
         img.src = imageSrc;
     }
+
     displayImage(imageUrl, containerId, count, strength, prompt) {
         const container = document.getElementById(`${containerId}-container`);
-        container.innerHTML = `<img src="${imageUrl}" style="width:100%; height:auto;">
-                               <div class="overlay">Frame: ${count} | Strength: ${strength} | Prompt: ${prompt}</div>`;
+    
+        // Find existing img and overlay elements within the container
+        let img = container.querySelector('img');
+        let overlay = container.querySelector('.overlay');
+    
+        // If img or overlay doesn't exist, create them
+        if (!img) {
+            img = document.createElement('img');
+            img.style.width = '100%';
+            img.style.height = 'auto';
+            container.appendChild(img);
+        }
+        if (!overlay) {
+            overlay = document.createElement('div');
+            overlay.className = 'overlay';
+            container.appendChild(overlay);
+        }
+    
+        // Set new image source and overlay text
+        img.src = imageUrl;
+        overlay.innerHTML = `Frame: ${count} | Strength: ${strength} | Prompt: ${prompt}`;
     }
+    
 
     createAndDisplayFinalImage(screenshotUrl, processedUrl, count) {
         const finalCanvas = document.createElement('canvas');

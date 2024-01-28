@@ -35,28 +35,31 @@ function setup() {
 
 function draw() {
     if (appRunning) {
-        background('wheat');
+        let bgColor = 'wheat'; // default background color
+        background(bgColor);
+        buffer.background(bgColor); // Correctly set buffer background
 
-        fill(255, 0, 0); // Red circle
-        ellipse(circleX, circleY, 50, 50);
+        // Moving ellipse outside captureAndSave (horizontal movement)
+        fill(0, 255, 0);
+        ellipse((frameCount % width), 50, 80, 80); // Horizontal movement
+    
+        // Start block 
+    
+        buffer.fill(255, 0, 0);
+        buffer.ellipse(200, (frameCount % buffer.height), 100, 100); // Vertical movement within buffer
 
-        buffer.background('wheat');
-        buffer.fill(128, 0, 128); // Purple rectangle
-        buffer.rect(rectX, rectY, 80, 40);
+        buffer.fill('purple');
+        buffer.ellipse(200, (frameCount % buffer.height * 2), 100, 100); // Vertical movement within buffer
+    
+        // End block
+    
+        // Commented out the line that draws the buffer to the main canvas
+        // image(buffer, 0, 0);
+    
+        fill('pink');
+        ellipse(60, 40, 70, 80); // Static ellipse outside captureAndSave
 
-
-        circleX += circleSpeedX;
-        rectY += rectSpeedY;
-
-        if (circleX > width || circleX < 0) {
-            circleSpeedX *= -1;
-        }
-
-        if (rectY > height || rectY < 0) {
-            rectSpeedY *= -1;
-        }
-
-        if (frameCount % 20 === 0) { // Example condition to stylize and process the frame
+        if (frameCount % 10 === 0) { // Example condition to stylize and process the frame
             genP5.stylize(buffer, canvas);
         }
     }
