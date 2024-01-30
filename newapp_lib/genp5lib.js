@@ -1,13 +1,10 @@
 class GenP5 {
-    constructor(resize = 448) { // Default resize parameter set to 224
-        this.screenshotCounter = 0;
-        this.blockImageCounter = 0;
-        this.processedImageCounter = 0;
-        this.finalImageCounter = 0;
+    constructor(resize = 448) {
+        this.resize = resize;
         this.currentStrength = 0.75;
         this.currentPrompt = "watercolor paint drops";
-        this.resize = resize;
 
+        this.imageDisplayQueue = [];
         this.screenshotImageUrls = [];
         this.blockImageUrls = [];
         this.processedImageUrls = [];
@@ -27,12 +24,10 @@ class GenP5 {
 
     stylize(buffer, canvas) {
         const outBlockImage = this.getOutBlockImage(canvas);
-        this.compressAndDisplayImage(outBlockImage, 'screenshot', ++this.screenshotCounter, this.currentStrength, this.currentPrompt);
-        this.screenshotImageUrls.push(outBlockImage);
+        this.enqueueImageDisplay(outBlockImage, 'screenshot', this.screenshotImageUrls.length + 1, this.currentStrength, this.currentPrompt);
 
         const blockImage = this.getBlockImage(buffer);
-        this.compressAndDisplayImage(blockImage, 'block', ++this.blockImageCounter, this.currentStrength, this.currentPrompt);
-        this.blockImageUrls.push(blockImage);
+        this.enqueueImageDisplay(blockImage, 'block', this.blockImageUrls.length + 1, this.currentStrength, this.currentPrompt);
 
         this.sendImageToServer(blockImage);
     }
@@ -43,20 +38,14 @@ class GenP5 {
     }
 
     getOutBlockImage(canvas) {
-        // buffer.hide();
-        
-        // buffer.show();
-        return canvas.toDataURL('image/jpeg', 0.5);;
+        return canvas.toDataURL('image/jpeg', 0.5);
     }
 
     handleServerMessage(event) {
         const data = JSON.parse(event.data);
         if (data && data.images && data.images.length > 0) {
             const processedImageUrl = data.images[0].url;
-            this.compressAndDisplayImage(processedImageUrl, 'processed', ++this.processedImageCounter, this.currentStrength, this.currentPrompt);
-            this.processedImageUrls.push(processedImageUrl);
-
-            this.createAndDisplayFinalImage(this.screenshotImageUrls[this.screenshotCounter - 1], processedImageUrl, this.processedImageCounter);
+            this.enqueueImageDisplay(processedImageUrl, 'processed', this.processedImageUrls.length + 1, this.currentStrength, this.currentPrompt);
         }
     }
 
@@ -70,9 +59,28 @@ class GenP5 {
         }
     }
 
-    compressAndDisplayImage(imageSrc, containerId, count, strength, prompt) {
+    enqueueImageDisplay(imageSrc, containerId, count, strength, prompt) {
+        this.imageDisplayQueue.push({ imageSrc, containerId, count, strength, prompt });
+
+        if (this.imageDisplayQueue.length === 1) {
+            this.processNextImageInQueue();
+        }
+    }
+
+    processNextImageInQueue() {
+        if (this.imageDisplayQueue.length === 0) return;
+
+        const { imageSrc, containerId, count, strength, prompt } = this.imageDisplayQueue[0];
+
+        this.compressAndDisplayImage(imageSrc, containerId, count, strength, prompt, () => {
+            this.imageDisplayQueue.shift();
+            this.processNextImageInQueue();
+        });
+    }
+
+    compressAndDisplayImage(imageSrc, containerId, count, strength, prompt, callback) {
         const img = new Image();
-        img.crossOrigin = 'anonymous'; // Set crossOrigin to 'anonymous' to address CORS issues
+        img.crossOrigin = 'anonymous';
         img.onload = () => {
             const canvas = document.createElement('canvas');
             const ctx = canvas.getContext('2d');
@@ -80,47 +88,47 @@ class GenP5 {
             canvas.height = this.resize;
             ctx.drawImage(img, 0, 0, this.resize, this.resize);
 
-            // Try-catch block to handle potential security errors gracefully
             try {
                 const dataUrl = canvas.toDataURL('image/jpeg');
                 this.displayImage(dataUrl, containerId, count, strength, prompt);
+                this.storeImageUrl(dataUrl, containerId, count);
+                callback();
             } catch (error) {
                 console.error('Error converting canvas to DataURL:', error);
-                // Handle the error, possibly by providing a fallback or logging the issue
+                callback();
             }
         };
         img.onerror = (error) => {
             console.error('Error loading image:', error);
-            // Handle image loading errors, possibly by providing a fallback image or logging the issue
+            callback();
         };
         img.src = imageSrc;
     }
 
     displayImage(imageUrl, containerId, count, strength, prompt) {
         const container = document.getElementById(`${containerId}-container`);
-    
-        // Find existing img and overlay elements within the container
-        let img = container.querySelector('img');
-        let overlay = container.querySelector('.overlay');
-    
-        // If img or overlay doesn't exist, create them
-        if (!img) {
-            img = document.createElement('img');
-            img.style.width = '100%';
-            img.style.height = 'auto';
-            container.appendChild(img);
-        }
-        if (!overlay) {
-            overlay = document.createElement('div');
-            overlay.className = 'overlay';
-            container.appendChild(overlay);
-        }
-    
-        // Set new image source and overlay text
-        img.src = imageUrl;
-        overlay.innerHTML = `Frame: ${count} | Strength: ${strength} | Prompt: ${prompt}`;
+        container.innerHTML = `<img src="${imageUrl}" style="width:100%; height:auto;">
+                               <div class="overlay">Frame: ${count} | Strength: ${strength} | Prompt: ${prompt}</div>`;
     }
-    
+
+    storeImageUrl(imageUrl, containerId, count) {
+        switch (containerId) {
+            case 'screenshot':
+                this.screenshotImageUrls[count - 1] = imageUrl;
+                break;
+            case 'block':
+                this.blockImageUrls[count - 1] = imageUrl;
+                break;
+            case 'processed':
+                this.processedImageUrls[count - 1] = imageUrl;
+                this.createAndDisplayFinalImage(this.screenshotImageUrls[count - 1], imageUrl, count);
+                break;
+            default:
+                break;
+        }
+    }
+
+
 
     createAndDisplayFinalImage(screenshotUrl, processedUrl, count) {
         const finalCanvas = document.createElement('canvas');
@@ -213,4 +221,3 @@ class GenP5 {
         return dominantColor;
     }
 }
-
