@@ -1,5 +1,5 @@
 class GenP5 {
-    constructor(resize = 448) { // Default resize parameter set to 448
+    constructor(resize = 448) { // Default resize parameter set to 224
         this.screenshotCounter = 0;
         this.blockImageCounter = 0;
         this.processedImageCounter = 0;
@@ -8,13 +8,7 @@ class GenP5 {
         this.currentPrompt = "watercolor paint drops";
         this.resize = resize;
 
-        this.screenshotImageUrls = [];
-        this.blockImageUrls = [];
-        this.processedImageUrls = [];
-        this.finalImageUrls = [];
-
-        // Initialize display queues for each image type
-        this.displayQueue = [];
+        this.imageQueue = {'screenshot': [], 'block':[], 'processed':[], 'final':[]}
 
         this.ws = null;
         this.connect();
@@ -30,16 +24,14 @@ class GenP5 {
 
     stylize(buffer, canvas) {
         const outBlockImage = this.getOutBlockImage(canvas);
+        this.compressAndDisplayImage(outBlockImage, 'screenshot', ++this.screenshotCounter, this.currentStrength, this.currentPrompt);
         this.screenshotImageUrls.push(outBlockImage);
-        this.queueDisplayImage(outBlockImage, 'screenshot', ++this.screenshotCounter, this.currentStrength, this.currentPrompt);
 
         const blockImage = this.getBlockImage(buffer);
+        this.compressAndDisplayImage(blockImage, 'block', ++this.blockImageCounter, this.currentStrength, this.currentPrompt);
         this.blockImageUrls.push(blockImage);
-        this.queueDisplayImage(blockImage, 'block', ++this.blockImageCounter, this.currentStrength, this.currentPrompt);
 
         this.sendImageToServer(blockImage);
-
-        this.processDisplayQueue();
     }
 
     getBlockImage(buffer) {
@@ -48,19 +40,20 @@ class GenP5 {
     }
 
     getOutBlockImage(canvas) {
-        return canvas.toDataURL('image/jpeg', 0.5);
+        // buffer.hide();
+        
+        // buffer.show();
+        return canvas.toDataURL('image/jpeg', 0.5);;
     }
 
     handleServerMessage(event) {
         const data = JSON.parse(event.data);
         if (data && data.images && data.images.length > 0) {
             const processedImageUrl = data.images[0].url;
+            this.compressAndDisplayImage(processedImageUrl, 'processed', ++this.processedImageCounter, this.processedImagequeue, this.currentStrength, this.currentPrompt);
             this.processedImageUrls.push(processedImageUrl);
-            this.queueDisplayImage(processedImageUrl, 'processed', ++this.processedImageCounter, this.currentStrength, this.currentPrompt);
 
-            this.queueCreateAndDisplayFinalImage(this.screenshotImageUrls[this.screenshotCounter - 1], processedImageUrl, ++this.finalImageCounter);
-
-            this.processDisplayQueue();
+            this.createAndDisplayFinalImage(this.screenshotImageUrls[this.screenshotCounter - 1], processedImageUrl, this.processedImageCounter, this.finalImagequeue);
         }
     }
 
@@ -74,13 +67,9 @@ class GenP5 {
         }
     }
 
-    queueDisplayImage(imageSrc, containerId, count, strength, prompt) {
-        this.displayQueue.push(() => this.compressAndDisplayImage(imageSrc, containerId, count, strength, prompt));
-    }
-
     compressAndDisplayImage(imageSrc, containerId, count, strength, prompt) {
         const img = new Image();
-        img.crossOrigin = 'anonymous';
+        img.crossOrigin = 'anonymous'; // Set crossOrigin to 'anonymous' to address CORS issues
         img.onload = () => {
             const canvas = document.createElement('canvas');
             const ctx = canvas.getContext('2d');
@@ -88,59 +77,75 @@ class GenP5 {
             canvas.height = this.resize;
             ctx.drawImage(img, 0, 0, this.resize, this.resize);
 
+            // Try-catch block to handle potential security errors gracefully
             try {
                 const dataUrl = canvas.toDataURL('image/jpeg');
                 this.displayImage(dataUrl, containerId, count, strength, prompt);
             } catch (error) {
                 console.error('Error converting canvas to DataURL:', error);
+                // Handle the error, possibly by providing a fallback or logging the issue
             }
         };
         img.onerror = (error) => {
             console.error('Error loading image:', error);
+            // Handle image loading errors, possibly by providing a fallback image or logging the issue
         };
         img.src = imageSrc;
     }
 
     displayImage(imageUrl, containerId, count, strength, prompt) {
-        const container = document.getElementById(`${containerId}-container`);
+        // Ensure the queue for this container is initialized
 
-        let img = container.querySelector('img');
-        let overlay = container.querySelector('.overlay');
+        // Create a promise that resolves when the queue is empty
+        const promise = new Promise(resolve => {
+            if (this.imageQueue[containerId].length === 0) {
+                resolve();
+            } else {
+                // If the queue is not empty, wait for the last item's promise to resolve
+                this.imageQueue[containerId][this.imageQueue[containerId].length - 1].then(resolve);
+            }
+        });
 
-        if (!img) {
-            img = document.createElement('img');
-            img.style.width = '100%';
-            img.style.height = 'auto';
-            container.appendChild(img);
-        }
-        if (!overlay) {
-            overlay = document.createElement('div');
-            overlay.className = 'overlay';
-            container.appendChild(overlay);
-        }
+        // Add the new promise to the queue
+        this.imageQueue[containerId].push(promise);
 
-        img.src = imageUrl;
-        overlay.innerHTML = `Frame: ${count} | Strength: ${strength} | Prompt: ${prompt}`;
+        // When the promise resolves, display the image
+        promise.then(() => {
+            const container = document.getElementById(`${containerId}-container`);
+            let img = container.querySelector('img');
+            let overlay = container.querySelector('.overlay');
 
-        // Once the current image is loaded, process the next task in the queue
-        img.onload = () => {
-            this.processDisplayQueue();
-        };
+            if (!img) {
+                img = document.createElement('img');
+                img.style.width = '100%';
+                img.style.height = 'auto';
+                container.appendChild(img);
+            }
+            if (!overlay) {
+                overlay = document.createElement('div');
+                overlay.className = 'overlay';
+                container.appendChild(overlay);
+            }
+
+            img.src = imageUrl;
+            overlay.innerHTML = `Frame: ${count} | Strength: ${strength} | Prompt: ${prompt}`;
+
+            // Remove this promise from the queue
+            this.imageQueue[containerId].shift();
+        });
     }
-
-    queueCreateAndDisplayFinalImage(screenshotUrl, processedUrl, count) {
-        this.displayQueue.push(() => this.createAndDisplayFinalImage(screenshotUrl, processedUrl, count));
-    }
+    
 
     createAndDisplayFinalImage(screenshotUrl, processedUrl, count) {
         const finalCanvas = document.createElement('canvas');
         const ctx = finalCanvas.getContext('2d');
         const screenshotImg = new Image();
         const processedImg = new Image();
-
+    
+        // Set crossOrigin to "anonymous" to request CORS-safe images
         screenshotImg.crossOrigin = "anonymous";
         processedImg.crossOrigin = "anonymous";
-
+    
         screenshotImg.onload = () => {
             finalCanvas.width = this.resize; // Set canvas size
             finalCanvas.height = this.resize; // Set canvas size
@@ -199,7 +204,7 @@ class GenP5 {
     
         screenshotImg.src = screenshotUrl;
     }
-
+    
     findMostFrequentColor(imageData) {
         let colorCount = {};
         let maxCount = 0;
@@ -220,15 +225,5 @@ class GenP5 {
         }
     
         return dominantColor;
-    }
-
-    processDisplayQueue() {
-        if (this.displayQueue.length > 0 && !this.currentlyDisplaying) {
-            this.currentlyDisplaying = true; // Mark that we're currently processing a display task
-            const displayTask = this.displayQueue.shift(); // Get the first task in the queue
-            displayTask(); // Execute the task
-        } else {
-            this.currentlyDisplaying = false; // No tasks are being processed
-        }
     }
 }
