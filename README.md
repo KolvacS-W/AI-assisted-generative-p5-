@@ -12,12 +12,17 @@ function?
 
 How can computational methods help translate intentions and inspirations in various forms to mathematical rules in forms of code? 
 
-We have developed a p5.js library supporting various functions for creating generative procedural arts by sourcing images using color and geometric information, and building a novel interface where artists can make full use of both the
-programmability of code and stylization ability of real time generative AI.
-
 ### Methods
-We are still developing and keep releasing the code! You can try these examples we updated:
+By buidling two main p5.js libraries, we enable a system with real-time stylization where user can make full use of both the
+programmability of code and stylization ability of real time generative AI by:
 
+real-time programmable stylization for any canvas contents
+
+creating generative procedural arts regulated by pre-determined patterns (e.g., color and geometric information)
+
+<img width="800" alt="Screen Shot 2024-02-01 at 5 43 02 PM" src="https://github.com/KolvacS-W/AI-assisted-generative-p5-/assets/55591358/e0cf347d-820f-4c79-9732-109657075e91">
+
+### Interface/Library Demo
 #### (01/20/2024)Updated Main interface (in app_captureSD_overlay folder): 
 demo p5.js art from: [Cloudy_v2_20220123 by SamuelYAN](https://openprocessing.org/sketch/1452002)
 
@@ -35,7 +40,7 @@ Current functionalities: real-time stylization, configuration and result browsin
 
 https://github.com/KolvacS-W/AI-assisted-generative-p5-/assets/55591358/4906bcfb-33d5-4bdc-be29-2ec3fe247645
 
-### P5.js library: Applying generative functions and pre-determined patterns in p5.js:
+### Pattern Regulation Demo:
 [Shrinking particle guided by input masks](https://editor.p5js.org/wujiaq/sketches/pZSMb4Jxv)
 
 ![particle_shrink](https://github.com/KolvacS-W/AI-assisted-generative-p5-/assets/55591358/cb829cc9-3475-4f7c-a0c9-cca79b2d59e8)
