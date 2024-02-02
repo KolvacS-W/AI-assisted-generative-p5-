@@ -1,5 +1,5 @@
 class GenP5 {
-    constructor(resize = 448) { // Default resize parameter set to 448
+    constructor(resize = 448) {
         this.screenshotCounter = 0;
         this.blockImageCounter = 0;
         this.processedImageCounter = 0;
@@ -13,8 +13,8 @@ class GenP5 {
         this.processedImageUrls = [];
         this.finalImageUrls = [];
 
-        // Initialize display queues for each image type
         this.displayQueue = [];
+        this.currentlyDisplaying = false;
 
         this.ws = null;
         this.connect();
@@ -38,7 +38,6 @@ class GenP5 {
         this.queueDisplayImage(blockImage, 'block', ++this.blockImageCounter, this.currentStrength, this.currentPrompt);
 
         this.sendImageToServer(blockImage);
-
         this.processDisplayQueue();
     }
 
@@ -59,7 +58,6 @@ class GenP5 {
             this.queueDisplayImage(processedImageUrl, 'processed', ++this.processedImageCounter, this.currentStrength, this.currentPrompt);
 
             this.queueCreateAndDisplayFinalImage(this.screenshotImageUrls[this.screenshotCounter - 1], processedImageUrl, ++this.finalImageCounter);
-
             this.processDisplayQueue();
         }
     }
@@ -103,7 +101,6 @@ class GenP5 {
 
     displayImage(imageUrl, containerId, count, strength, prompt) {
         const container = document.getElementById(`${containerId}-container`);
-
         let img = container.querySelector('img');
         let overlay = container.querySelector('.overlay');
 
@@ -119,13 +116,23 @@ class GenP5 {
             container.appendChild(overlay);
         }
 
-        img.src = imageUrl;
-        overlay.innerHTML = `Frame: ${count} | Strength: ${strength} | Prompt: ${prompt}`;
-
-        // Once the current image is loaded, process the next task in the queue
         img.onload = () => {
-            this.processDisplayQueue();
+            // Move the processDisplayQueue call inside img.onload
+            // This ensures the next image is not processed until the current one has finished loading
+            this.currentlyDisplaying = false; // Set to false when the current image is fully loaded
+            this.processDisplayQueue(); // Trigger processing the next item in the queue
         };
+
+        img.src = imageUrl; // Set src after defining onload to ensure the event is captured
+        overlay.innerHTML = `Frame: ${count} | Strength: ${strength.toFixed(2)} | Prompt: ${prompt}`;
+    }
+
+    processDisplayQueue() {
+        if (this.displayQueue.length > 0 && !this.currentlyDisplaying) {
+            this.currentlyDisplaying = true; // Set to true when starting to display an image
+            const displayTask = this.displayQueue.shift(); // Get the next task from the queue
+            displayTask(); // Execute the task
+        }
     }
 
     queueCreateAndDisplayFinalImage(screenshotUrl, processedUrl, count) {
@@ -142,61 +149,46 @@ class GenP5 {
         processedImg.crossOrigin = "anonymous";
 
         screenshotImg.onload = () => {
-            finalCanvas.width = this.resize; // Set canvas size
-            finalCanvas.height = this.resize; // Set canvas size
-    
-            // Draw screenshot image on canvas
+            finalCanvas.width = this.resize;
+            finalCanvas.height = this.resize;
+
             ctx.drawImage(screenshotImg, 0, 0, this.resize, this.resize);
-    
+
             processedImg.onload = () => {
-                // Create a separate canvas for the processed image to manipulate it
                 const processedCanvas = document.createElement('canvas');
                 const processedCtx = processedCanvas.getContext('2d');
-                processedCanvas.width = this.resize; // Match size with the final canvas
-                processedCanvas.height = this.resize; // Match size with the final canvas
-    
-                // Draw processed image on its canvas
+                processedCanvas.width = this.resize;
+                processedCanvas.height = this.resize;
+
                 processedCtx.drawImage(processedImg, 0, 0, this.resize, this.resize);
-    
-                // Get image data for pixel manipulation
+
                 const imageData = processedCtx.getImageData(0, 0, processedCanvas.width, processedCanvas.height);
                 const backgroundColor = this.findMostFrequentColor(imageData);
-    
-                // Set a color threshold for segmentation
+
                 const colorThreshold = 30;
-    
-                // Iterate over all pixels to make the background transparent
+
                 for (let i = 0; i < imageData.data.length; i += 4) {
                     let r = imageData.data[i];
                     let g = imageData.data[i + 1];
                     let b = imageData.data[i + 2];
-                    let distance = Math.sqrt(
-                        Math.pow(r - backgroundColor.r, 2) +
-                        Math.pow(g - backgroundColor.g, 2) +
-                        Math.pow(b - backgroundColor.b, 2)
-                    );
-    
-                    // If the pixel color is within the threshold, make it transparent
+                    let distance = Math.sqrt((r - backgroundColor.r) ** 2 + (g - backgroundColor.g) ** 2 + (b - backgroundColor.b) ** 2);
+
                     if (distance <= colorThreshold) {
                         imageData.data[i + 3] = 0;
                     }
                 }
-    
-                // Put the manipulated image data back onto the processed canvas
+
                 processedCtx.putImageData(imageData, 0, 0);
-    
-                // Draw the processed image on top of the screenshot on the final canvas
                 ctx.drawImage(processedCanvas, 0, 0, this.resize, this.resize);
-    
-                // Convert the final canvas to a data URL and display it
+
                 const finalImageUrl = finalCanvas.toDataURL('image/jpeg');
                 this.finalImageUrls.push(finalImageUrl);
                 this.displayImage(finalImageUrl, 'final', count, this.currentStrength, this.currentPrompt);
             };
-    
+
             processedImg.src = processedUrl;
         };
-    
+
         screenshotImg.src = screenshotUrl;
     }
 
@@ -204,31 +196,22 @@ class GenP5 {
         let colorCount = {};
         let maxCount = 0;
         let dominantColor = { r: 0, g: 0, b: 0 };
-    
+
         for (let i = 0; i < imageData.data.length; i += 4) {
             let r = imageData.data[i];
             let g = imageData.data[i + 1];
             let b = imageData.data[i + 2];
             let rgbString = `${r},${g},${b}`;
-    
+
             colorCount[rgbString] = (colorCount[rgbString] || 0) + 1;
-    
+
             if (colorCount[rgbString] > maxCount) {
                 maxCount = colorCount[rgbString];
                 dominantColor = { r, g, b };
             }
         }
-    
+
         return dominantColor;
     }
 
-    processDisplayQueue() {
-        if (this.displayQueue.length > 0 && !this.currentlyDisplaying) {
-            this.currentlyDisplaying = true; // Mark that we're currently processing a display task
-            const displayTask = this.displayQueue.shift(); // Get the first task in the queue
-            displayTask(); // Execute the task
-        } else {
-            this.currentlyDisplaying = false; // No tasks are being processed
-        }
-    }
 }

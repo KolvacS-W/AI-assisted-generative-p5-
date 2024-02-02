@@ -22,6 +22,9 @@
             background: rgba(0, 0, 0, 0.5);
             color: #fff;
             text-align: center;
+            padding: 5px; /* Ensure padding for readability */
+            box-sizing: border-box; /* Ensures padding doesn't increase size of the overlay */
+            z-index: 2; /* Ensure overlay is above other contents */
         }
         .row {
             margin-bottom: 20px; /* Add space between rows */
@@ -39,17 +42,25 @@
     </div>
 
     <div class="row">
-        <div id="screenshot-container" class="container"></div>
-        <div id="block-container" class="container"></div>
-        <div id="processed-container" class="container"></div>
+        <div id="screenshot-container" class="container">
+            <div class="overlay"></div>
+        </div>
+        <div id="block-container" class="container">
+            <div class="overlay"></div>
+        </div>
+        <div id="processed-container" class="container">
+            <div class="overlay"></div>
+        </div>
     </div>
 
     <div class="row">
-        <div id="final-container" class="container"></div>
+        <div id="final-container" class="container">
+            <div class="overlay"></div>
+        </div>
     </div>
 
-    <script src="genp5lib.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.4.0/p5.js"></script>
+    <script src="genp5lib.js"></script>
     <script src="sketch.js"></script>
 </body>
 </html>
