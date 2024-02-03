@@ -7,6 +7,7 @@ class GenP5 {
         this.currentStrength = 0.75;
         this.currentPrompt = "watercolor paint drops";
         this.resize = resize;
+        this.imagedisplaytime = 2000;
 
         this.screenshotQueue = [];
         this.fullscreenshotQueue = [];
@@ -139,24 +140,32 @@ class GenP5 {
         }
 
         img.onload = () => {
-            const currentlyDisplayingFlag = `displaying${type.charAt(0).toUpperCase() + type.slice(1)}`;
-            this[currentlyDisplayingFlag] = false;
-            this.processDisplayQueue(type);
-            if (type=='block'){
-              this[`${type}ImageCounter`]+=1;
-              this.sendImageToServer(imageUrl, this.blockImageCounter);
-            }
-          
-            else if (type=='screenshot'){
-              this[`${type}ImageCounter`]+=1;
-            }
 
-            overlay.innerHTML = `Frame: ${count} | Strength: ${this.currentStrength.toFixed(2)} | Prompt: ${this.currentPrompt}`;
-            
+            // Set a timeout to ensure the image is displayed for at least 3 seconds
+            setTimeout(() => {
+                const currentlyDisplayingFlag = `displaying${type.charAt(0).toUpperCase() + type.slice(1)}`;
+                this[currentlyDisplayingFlag] = false;
+                this.processDisplayQueue(type);
+                if (type == 'block') {
+                    this[`${type}ImageCounter`] += 1;
+                    this.sendImageToServer(imageUrl, this.blockImageCounter);
+                    count = this[`${type}ImageCounter`];
+                } else if (type == 'screenshot') {
+                    this[`${type}ImageCounter`] += 1;
+                    count = this[`${type}ImageCounter`];
+                }
+                        
+                overlay.innerHTML = `Frame: ${count} | Strength: ${this.currentStrength.toFixed(2)} | Prompt: ${this.currentPrompt}`;
+                
+            }, this.imagedisplaytime); // Change 3000 to your desired minimum display time in milliseconds
+
+          
         };
 
+        img.onerror = (error) => console.error('Error loading image:', error);
         img.src = imageUrl;
     }
+
 
       createAndDisplayFinalImage(processedUrl, count) {
         const finalCanvas = document.createElement('canvas');
