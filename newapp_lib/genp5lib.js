@@ -7,7 +7,7 @@ class GenP5 {
         this.currentStrength = 0.75;
         this.currentPrompt = "watercolor paint drops";
         this.resize = resize;
-        this.imagedisplaytime = 2000;
+        this.imagedisplaytime = 500;
 
         this.screenshotQueue = [];
         this.fullscreenshotQueue = [];
@@ -28,6 +28,7 @@ class GenP5 {
         });
       
         this.connect();
+        this.clearsavedimages();
     }
 
     connect() {
@@ -209,6 +210,8 @@ class GenP5 {
 
                 const finalImageUrl = finalCanvas.toDataURL('image/jpeg');
                 this.queueDisplayImage(finalImageUrl, 'final', count);
+                this.saveProcessedImage(finalImageUrl);
+                this.displayImageBasedOnSlider();
             };
 
             processedImg.onerror = () => {
@@ -253,4 +256,41 @@ class GenP5 {
 
         return dominantColor;
     }
+  
+    saveProcessedImage(imageUrl) {
+      fetch('http://localhost:3001/save-image', {  // Use the correct server URL
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ imageUrl })
+      }).then(response => response.json())
+        .then(data => console.log(data))
+        .catch(error => console.error('Error:', error));
+  }
+  
+  clearsavedimages() {
+    // Call to clear the images on the server
+    fetch('http://localhost:3001/clear-images')
+    .then(response => response.text())
+    .then(data => console.log(data))
+    .catch(error => console.error('Error:', error));
+  }
+  
+  displayImageBasedOnSlider() {
+    const slider = document.getElementById('image-slider');
+    const imageDisplayContainer = document.getElementById('image-display-container');
+
+    fetch('http://localhost:3001/get-smallest-image-number')
+        .then(response => response.json())
+        .then(data => {
+            const smallestImageNumber = data.minNumber;
+            const adjustedImageIndex = parseInt(slider.value) + smallestImageNumber;
+
+            const imageUrl = `http://localhost:3001/saved_images/image_${adjustedImageIndex}.jpg`;
+            imageDisplayContainer.innerHTML = `<img src="${imageUrl}" alt="Saved Image" style="width: 100%; height: auto;">`;
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            imageDisplayContainer.innerHTML = `<p>Error loading image.</p>`;
+        });
+  }
 }

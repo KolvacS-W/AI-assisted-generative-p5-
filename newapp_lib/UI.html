@@ -32,6 +32,11 @@
         button {
             margin-bottom: 20px;
         }
+      #image-display-container {
+          width: 400px;
+          height: auto; /* Automatically adjust the height based on the image aspect ratio */
+      }
+
     </style>
 </head>
 <body>
@@ -58,6 +63,17 @@
             <div class="overlay"></div>
         </div>
     </div>
+  
+    <div class="row" id="result-gallery-row">
+      <div id="slider-container">
+          <label for="image-slider">Image Slider</label>
+          <input type="range" id="image-slider" min="1" max="20" value="1">
+          <!-- <button id="show-image-button">Show</button> -->
+      </div>
+      <div id="image-display-container">
+          <!-- Image will be displayed here -->
+      </div>
+  </div>
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.4.0/p5.js"></script>
     <script src="genp5lib.js"></script>
