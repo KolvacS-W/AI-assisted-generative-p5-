@@ -1,6 +1,6 @@
 class GenP5 {
     constructor(resize = 448) {
-        this.screenshotCounter = 0;
+        this.screenshotImageCounter = 0;
         this.blockImageCounter = 0;
         this.processedImageCounter = 0;
         this.finalImageCounter = 0;
@@ -8,37 +8,48 @@ class GenP5 {
         this.currentPrompt = "watercolor paint drops";
         this.resize = resize;
 
-        this.screenshotImageUrls = [];
-        this.blockImageUrls = [];
-        this.processedImageUrls = [];
-        this.finalImageUrls = [];
+        this.screenshotQueue = [];
+        this.fullscreenshotQueue = [];
+        this.blockQueue = [];
+        this.processedQueue = [];
+        this.finalQueue = [];
 
-        this.displayQueue = [];
-        this.currentlyDisplaying = false;
+        this.displayingScreenshot = false;
+        this.displayingBlock = false;
+        this.displayingProcessed = false;
+        this.displayingFinal = false;
 
         this.ws = null;
+      
+        // Close the WebSocket connection when the window is unloaded or closed
+        window.addEventListener('beforeunload', () => {
+            this.closeWebSocket();
+        });
+      
         this.connect();
     }
 
     connect() {
-        this.ws = new WebSocket('ws://localhost:3003');
+        this.ws = new WebSocket('ws://localhost:3001');
         this.ws.onopen = () => console.log("Connected to WebSocket server");
         this.ws.onmessage = (event) => this.handleServerMessage(event);
         this.ws.onclose = () => console.log("WebSocket connection closed");
         this.ws.onerror = (error) => console.error("WebSocket error:", error);
     }
+  
+      closeWebSocket() {
+        if (this.ws && this.ws.readyState === WebSocket.OPEN) {
+            this.ws.close();
+        }
+    }
 
     stylize(buffer, canvas) {
         const outBlockImage = this.getOutBlockImage(canvas);
-        this.screenshotImageUrls.push(outBlockImage);
-        this.queueDisplayImage(outBlockImage, 'screenshot', ++this.screenshotCounter, this.currentStrength, this.currentPrompt);
+        this.fullscreenshotQueue.push(outBlockImage);
+        this.queueDisplayImage(outBlockImage, 'screenshot', this.screenshotImageCounter);
 
         const blockImage = this.getBlockImage(buffer);
-        this.blockImageUrls.push(blockImage);
-        this.queueDisplayImage(blockImage, 'block', ++this.blockImageCounter, this.currentStrength, this.currentPrompt);
-
-        this.sendImageToServer(blockImage);
-        this.processDisplayQueue();
+        this.queueDisplayImage(blockImage, 'block', this.blockImageCounter);
     }
 
     getBlockImage(buffer) {
@@ -51,32 +62,49 @@ class GenP5 {
     }
 
     handleServerMessage(event) {
-        const data = JSON.parse(event.data);
-        if (data && data.images && data.images.length > 0) {
-            const processedImageUrl = data.images[0].url;
-            this.processedImageUrls.push(processedImageUrl);
-            this.queueDisplayImage(processedImageUrl, 'processed', ++this.processedImageCounter, this.currentStrength, this.currentPrompt);
+            const data = JSON.parse(event.data);
+            // console.log('server data:')
+            console.log(data)
+            if (data && data.result.images && data.result.images.length > 0) {
+                const processedImageUrl = data.result.images[0].url;
+                this.queueDisplayImage(processedImageUrl, 'processed', data.count);
 
-            this.queueCreateAndDisplayFinalImage(this.screenshotImageUrls[this.screenshotCounter - 1], processedImageUrl, ++this.finalImageCounter);
-            this.processDisplayQueue();
-        }
+                this.createAndDisplayFinalImage(processedImageUrl, data.count);
+            }
+        
     }
 
-    sendImageToServer(imageUrl) {
+    sendImageToServer(imageUrl, count) {
         if (this.ws && this.ws.readyState === WebSocket.OPEN) {
             this.ws.send(JSON.stringify({
                 image_url: imageUrl,
                 strength: this.currentStrength,
-                prompt: this.currentPrompt
+                prompt: this.currentPrompt,
+                count: count,
+                request_id:count.toString()
             }));
         }
     }
 
-    queueDisplayImage(imageSrc, containerId, count, strength, prompt) {
-        this.displayQueue.push(() => this.compressAndDisplayImage(imageSrc, containerId, count, strength, prompt));
+    queueDisplayImage(imageSrc, type, count) {
+        const queue = this[`${type}Queue`];
+        queue.push({ imageSrc, count });
+        this.processDisplayQueue(type);
     }
 
-    compressAndDisplayImage(imageSrc, containerId, count, strength, prompt) {
+    processDisplayQueue(type) {
+        const queue = this[`${type}Queue`];
+        const currentlyDisplayingFlag = `displaying${type.charAt(0).toUpperCase() + type.slice(1)}`;
+
+        if (queue.length > 0 && !this[currentlyDisplayingFlag]) {
+            this[currentlyDisplayingFlag] = true;
+            const { imageSrc, count } = queue.shift();
+            this.compressAndDisplayImage(imageSrc, type, count);
+        }
+    }
+
+
+    compressAndDisplayImage(imageSrc, type, count) {
         const img = new Image();
         img.crossOrigin = 'anonymous';
         img.onload = () => {
@@ -86,21 +114,15 @@ class GenP5 {
             canvas.height = this.resize;
             ctx.drawImage(img, 0, 0, this.resize, this.resize);
 
-            try {
-                const dataUrl = canvas.toDataURL('image/jpeg');
-                this.displayImage(dataUrl, containerId, count, strength, prompt);
-            } catch (error) {
-                console.error('Error converting canvas to DataURL:', error);
-            }
+            const dataUrl = canvas.toDataURL('image/jpeg');
+            this.displayImage(dataUrl, type, count);
         };
-        img.onerror = (error) => {
-            console.error('Error loading image:', error);
-        };
+        img.onerror = (error) => console.error('Error loading image:', error);
         img.src = imageSrc;
     }
 
-    displayImage(imageUrl, containerId, count, strength, prompt) {
-        const container = document.getElementById(`${containerId}-container`);
+    displayImage(imageUrl, type, count) {
+        const container = document.getElementById(`${type}-container`);
         let img = container.querySelector('img');
         let overlay = container.querySelector('.overlay');
 
@@ -117,29 +139,26 @@ class GenP5 {
         }
 
         img.onload = () => {
-            // Move the processDisplayQueue call inside img.onload
-            // This ensures the next image is not processed until the current one has finished loading
-            this.currentlyDisplaying = false; // Set to false when the current image is fully loaded
-            this.processDisplayQueue(); // Trigger processing the next item in the queue
+            const currentlyDisplayingFlag = `displaying${type.charAt(0).toUpperCase() + type.slice(1)}`;
+            this[currentlyDisplayingFlag] = false;
+            this.processDisplayQueue(type);
+            if (type=='block'){
+              this[`${type}ImageCounter`]+=1;
+              this.sendImageToServer(imageUrl, this.blockImageCounter);
+            }
+          
+            else if (type=='screenshot'){
+              this[`${type}ImageCounter`]+=1;
+            }
+
+            overlay.innerHTML = `Frame: ${count} | Strength: ${this.currentStrength.toFixed(2)} | Prompt: ${this.currentPrompt}`;
+            
         };
 
-        img.src = imageUrl; // Set src after defining onload to ensure the event is captured
-        overlay.innerHTML = `Frame: ${count} | Strength: ${strength.toFixed(2)} | Prompt: ${prompt}`;
+        img.src = imageUrl;
     }
 
-    processDisplayQueue() {
-        if (this.displayQueue.length > 0 && !this.currentlyDisplaying) {
-            this.currentlyDisplaying = true; // Set to true when starting to display an image
-            const displayTask = this.displayQueue.shift(); // Get the next task from the queue
-            displayTask(); // Execute the task
-        }
-    }
-
-    queueCreateAndDisplayFinalImage(screenshotUrl, processedUrl, count) {
-        this.displayQueue.push(() => this.createAndDisplayFinalImage(screenshotUrl, processedUrl, count));
-    }
-
-    createAndDisplayFinalImage(screenshotUrl, processedUrl, count) {
+      createAndDisplayFinalImage(processedUrl, count) {
         const finalCanvas = document.createElement('canvas');
         const ctx = finalCanvas.getContext('2d');
         const screenshotImg = new Image();
@@ -151,7 +170,6 @@ class GenP5 {
         screenshotImg.onload = () => {
             finalCanvas.width = this.resize;
             finalCanvas.height = this.resize;
-
             ctx.drawImage(screenshotImg, 0, 0, this.resize, this.resize);
 
             processedImg.onload = () => {
@@ -166,7 +184,6 @@ class GenP5 {
                 const backgroundColor = this.findMostFrequentColor(imageData);
 
                 const colorThreshold = 30;
-
                 for (let i = 0; i < imageData.data.length; i += 4) {
                     let r = imageData.data[i];
                     let g = imageData.data[i + 1];
@@ -182,16 +199,30 @@ class GenP5 {
                 ctx.drawImage(processedCanvas, 0, 0, this.resize, this.resize);
 
                 const finalImageUrl = finalCanvas.toDataURL('image/jpeg');
-                this.finalImageUrls.push(finalImageUrl);
-                this.displayImage(finalImageUrl, 'final', count, this.currentStrength, this.currentPrompt);
+                this.queueDisplayImage(finalImageUrl, 'final', count);
+            };
+
+            processedImg.onerror = () => {
+                console.error('Error loading processed image');
+                this.displayingFinal = false;
+                this.processDisplayQueue('final');
             };
 
             processedImg.src = processedUrl;
         };
 
-        screenshotImg.src = screenshotUrl;
-    }
+        screenshotImg.onerror = () => {
+            console.error('Error loading screenshot image');
+            this.displayingFinal = false;
+            this.processDisplayQueue('final');
+        };
+      
+        // console.log('check queue', this.fullscreenshotQueue.length)
+        // console.log('check count', count)
 
+        screenshotImg.src = this.fullscreenshotQueue[count];
+    }
+  
     findMostFrequentColor(imageData) {
         let colorCount = {};
         let maxCount = 0;
@@ -213,5 +244,4 @@ class GenP5 {
 
         return dominantColor;
     }
-
 }

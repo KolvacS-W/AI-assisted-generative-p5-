@@ -12,7 +12,7 @@ function setup() {
     let canvas = createCanvas(400, 400);
     canvas.parent('p5-container'); // Ensure there's a div with id 'p5-container' in your HTML
     genP5 = new GenP5();
-    genP5.connect();
+    // genP5.connect();
 
     buffer = createGraphics(width, height); // Create a buffer with the same dimensions as the canvas
 
@@ -59,7 +59,7 @@ function draw() {
         fill('pink');
         ellipse(60, 40, 70, 80); // Static ellipse outside captureAndSave
 
-        if (frameCount % 10 === 0) { // Example condition to stylize and process the frame
+        if (frameCount % 20 === 0) { // Example condition to stylize and process the frame
             genP5.stylize(buffer, canvas);
         }
     }
