@@ -4,10 +4,10 @@ class GenP5 {
         this.blockImageCounter = 0;
         this.processedImageCounter = 0;
         this.finalImageCounter = 0;
-        this.currentStrength = 0.75;
-        this.currentPrompt = "watercolor paint drops";
+        this.Strengthlist = [];
+        this.Promptlist = [];
         this.resize = resize;
-        this.imagedisplaytime = 500;
+        this.imagedisplaytime = 100;
 
         this.screenshotQueue = [];
         this.fullscreenshotQueue = [];
@@ -29,6 +29,9 @@ class GenP5 {
       
         this.connect();
         this.clearsavedimages();
+        // Initialize slider event listener
+        this.initSliderListener();
+
     }
 
     connect() {
@@ -44,8 +47,17 @@ class GenP5 {
             this.ws.close();
         }
     }
+  
+    initSliderListener() {
+        const slider = document.getElementById('image-slider');
+        if (slider) {
+            slider.addEventListener('input', () => this.displayImageBasedOnSlider());
+        }
+    }
 
-    stylize(buffer, canvas) {
+    stylize(prompt, strength, buffer, canvas) {
+        this.Strengthlist.push(strength)
+        this.Promptlist.push(prompt)
         const outBlockImage = this.getOutBlockImage(canvas);
         this.fullscreenshotQueue.push(outBlockImage);
         this.queueDisplayImage(outBlockImage, 'screenshot', this.screenshotImageCounter);
@@ -80,8 +92,8 @@ class GenP5 {
         if (this.ws && this.ws.readyState === WebSocket.OPEN) {
             this.ws.send(JSON.stringify({
                 image_url: imageUrl,
-                strength: this.currentStrength,
-                prompt: this.currentPrompt,
+                strength: this.Strengthlist[0],
+                prompt: this.Promptlist[0],
                 count: count,
                 request_id:count.toString()
             }));
@@ -149,6 +161,7 @@ class GenP5 {
                 this.processDisplayQueue(type);
                 if (type == 'block') {
                     this[`${type}ImageCounter`] += 1;
+                    // console.log('sent,', this.blockImageCounter)
                     this.sendImageToServer(imageUrl, this.blockImageCounter);
                     count = this[`${type}ImageCounter`];
                 } else if (type == 'screenshot') {
@@ -156,7 +169,7 @@ class GenP5 {
                     count = this[`${type}ImageCounter`];
                 }
                         
-                overlay.innerHTML = `Frame: ${count} | Strength: ${this.currentStrength.toFixed(2)} | Prompt: ${this.currentPrompt}`;
+                overlay.innerHTML = `Frame: ${count} | Strength: ${this.Strengthlist[0].toFixed(2)} | Prompt: ${this.Promptlist[0]}`;
                 
             }, this.imagedisplaytime); // Change 3000 to your desired minimum display time in milliseconds
 
@@ -210,8 +223,8 @@ class GenP5 {
 
                 const finalImageUrl = finalCanvas.toDataURL('image/jpeg');
                 this.queueDisplayImage(finalImageUrl, 'final', count);
-                this.saveProcessedImage(finalImageUrl);
-                this.displayImageBasedOnSlider();
+                this.saveProcessedImage(finalImageUrl, count);
+                // this.displayImageBasedOnSlider();
             };
 
             processedImg.onerror = () => {
@@ -257,11 +270,11 @@ class GenP5 {
         return dominantColor;
     }
   
-    saveProcessedImage(imageUrl) {
+    saveProcessedImage(imageUrl, count) {
       fetch('http://localhost:3001/save-image', {  // Use the correct server URL
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ imageUrl })
+          body: JSON.stringify({ imageUrl, count: count })
       }).then(response => response.json())
         .then(data => console.log(data))
         .catch(error => console.error('Error:', error));

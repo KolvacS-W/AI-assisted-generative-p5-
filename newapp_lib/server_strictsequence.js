@@ -5,7 +5,7 @@ const fal = require('@fal-ai/serverless-client');
 const http = require('http');
 const app = express();
 const bodyParser = require('body-parser');
-let lastreq2fal = null;
+
 // Define WebSocket globally
 global.WebSocket = WebSocket;
 
@@ -48,7 +48,7 @@ const imageSavePath = '/Users/wujiaqi/Downloads/saved_images'; // Set your image
 let savedImages = [];
 var imagenum = 0; // Number of each saved image
 let workedidlist = [];
-let requestQueue = []; // Initialize the request queue
+const requestQueue = []; // Initialize the request queue
 
 // Clear saved images when refresh
 app.get('/clear-images', async (req, res) => {
@@ -87,7 +87,7 @@ app.post('/save-image', async (req, res) => {
 
         savedImages.push(imagePath);
 
-        // console.log('Image saved successfully', imageName)
+        console.log('Image saved successfully', imageName)
         res.json({ message: 'Image saved successfully', imageName });
     } catch (error) {
         console.error('Error saving image:', error);
@@ -126,15 +126,12 @@ const falConnection = fal.realtime.connect("110602490-lcm", {
                 count: requestInfo.count,
                 request_id: result.request_id
             };
-            console.log('get result from fal:', result.request_id)
+            console.log('solved:', result.request_id)
             workedidlist.push(parseInt(result.request_id))
             requestInfo.ws.send(JSON.stringify(response));
-            console.log('sent to frontend:', requestInfo.request_id)
+            console.log('sent', requestInfo.request_id)
             // Remove the client request from the list after sending the response
             clientRequests.delete(result.request_id);
-
-            // NEW: Clear the timeout when a result is received
-            clearTimeout(requestInfo.timeoutId);
         }
     },
     onError: (error) => {
@@ -158,6 +155,12 @@ wss.on('connection', function connection(ws) {
             // console.log('push:',workedidlist)
             // console.log('push:',parseInt(data.request_id)-1)
             requestQueue.push(data);
+
+            // Check if the condition is met to send the request to FAL
+            // if (parseInt(data.request_id) === 1 || workedidlist.includes(parseInt(data.request_id) - 1)) {
+            //     // Add the request to the queue
+            //     processRequestQueue(); // Start processing the queue
+            // }
 
         } catch (error) {
             console.error('Error processing message:', error);
@@ -195,18 +198,6 @@ function processRequestQueue() {
                     request_id: data.request_id // Pass the requestId to FAL
                 });
                 console.log('sent to fal:', data.request_id);
-                //keep this req
-                lastreq2fal = data;
-                // NEW: Set a timeout to resend the request if no result is received within 3 seconds
-                const timeoutId = setTimeout(() => {
-                    console.log('timeout. put back request to queue', lastreq2fal.request_id);
-                    //if timeout, put it back
-                    requestQueue.unshift(lastreq2fal)
-                    processRequestQueue(); // Try to resend the request
-                }, 3000); // 3 seconds timeout
-
-                // NEW: Store the timeoutId with the request information
-                clientRequests.get(data.request_id).timeoutId = timeoutId;
             } catch (error) {
                 console.error('Error sending data to FAL:', error);
             }
@@ -216,6 +207,7 @@ function processRequestQueue() {
 
 // Periodically check and process the request queue
 setInterval(processRequestQueue, 1000); // Check the queue every 1 second
+
 
 app.use((error, req, res, next) => {
     console.error(error);

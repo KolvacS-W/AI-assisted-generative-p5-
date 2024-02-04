@@ -53,14 +53,11 @@ function draw() {
     
         // End block
     
-        // Commented out the line that draws the buffer to the main canvas
-        // image(buffer, 0, 0);
-    
         fill('pink');
         ellipse(60, 40, 70, 80); // Static ellipse outside captureAndSave
 
         if (frameCount % 20 === 0) { // Example condition to stylize and process the frame
-            genP5.stylize(buffer, canvas);
+            genP5.stylize('realistic yarn balls', 0.75, buffer, canvas);
         }
     }
 }
