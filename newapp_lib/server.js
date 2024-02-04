@@ -126,7 +126,7 @@ const falConnection = fal.realtime.connect("110602490-lcm", {
                 count: requestInfo.count,
                 request_id: result.request_id
             };
-            console.log('get result from fal:', result.request_id)
+            // console.log('get result from fal:', result.request_id)
             workedidlist.push(parseInt(result.request_id))
             requestInfo.ws.send(JSON.stringify(response));
             console.log('sent to frontend:', requestInfo.request_id)
@@ -166,11 +166,33 @@ wss.on('connection', function connection(ws) {
 
     ws.on('close', () => {
         // Remove all requests from this client
-        clientRequests.forEach((value, key) => {
-            if (value.ws === ws) {
-                clientRequests.delete(key);
-            }
+        console.log('WebSocket connection closed by the front end. Re-initiating and reloading...');
+
+        // Clean up and re-initialize server components here as needed.
+        // For example, you can clear request queues, reset data, and re-establish connections.
+
+        // Clear client requests
+        clientRequests.forEach((requests) => {
+            clearTimeout(requests.timeoutId);
         });
+
+        clientRequests.clear();
+
+        // Clear request queue
+        requestQueue = [];
+
+        // Clear worked ID list
+        workedidlist = [];
+
+
+        console.log(requestQueue)
+        console.log(clientRequests)
+
+        // clientRequests.forEach((value, key) => {
+        //     if (value.ws === ws) {
+        //         clientRequests.delete(key);
+        //     }
+        // });
     });
 });
 
@@ -208,7 +230,11 @@ function processRequestQueue() {
                 // NEW: Store the timeoutId with the request information
                 clientRequests.get(data.request_id).timeoutId = timeoutId;
             } catch (error) {
-                console.error('Error sending data to FAL:', error);
+                console.error('Error sending data to FAL:', error.message);
+                // if (error.message === "Cannot set properties of undefined (setting 'timeoutId')") {
+                //     console.error('front-end exited, Reloading the server...');
+                //     process.exit(1); // Exit with an error code to indicate the need for a restart
+                // }
             }
         }
     }
