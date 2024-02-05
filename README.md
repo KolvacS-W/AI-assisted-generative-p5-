@@ -1,4 +1,5 @@
 # AI-assisted-generative-p5
+![wave](https://github.com/KolvacS-W/AI-assisted-generative-p5-/assets/55591358/6dcf51c8-f22e-41e3-a1dc-59b4d4fb2dfc)
 
 This is the code base of the generative p5 project by Jiaqi Wu and Eytan Adar.
 
