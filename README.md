@@ -1,16 +1,14 @@
 # AI-assisted-generative-p5
-![wave](https://github.com/KolvacS-W/AI-assisted-generative-p5-/assets/55591358/6dcf51c8-f22e-41e3-a1dc-59b4d4fb2dfc)
-(this example based on art from [Cloudy_v2_20220123 by SamuelYAN](https://openprocessing.org/sketch/1452002))
+
 
 This is the code base of the generative p5 project by Jiaqi Wu and Eytan Adar.
 
 ### Goal:
-We explore how to amplify this process by connecting real-world inspirations, vague intents, and abstract patterns. 
+We explore how to amplify generative procedural art creation by connecting real-world inspirations, vague intents, and abstract patterns. 
 
 Specifically, 
 
-how can generative AI augment generative procedural arts cooperating with traditional randomness
-function? 
+how can generative AI augment generative procedural arts cooperating with traditional function? 
 
 How can computational methods help translate intentions and inspirations in various forms to mathematical rules in forms of code? 
 
@@ -18,13 +16,24 @@ How can computational methods help translate intentions and inspirations in vari
 By buidling two main p5.js libraries, we enable a system with real-time stylization where user can make full use of both the
 programmability of code and stylization ability of real time generative AI by:
 
-real-time programmable stylization for any canvas contents
+#### 1. real-time programmable stylization for any canvas contents
 
-creating generative procedural arts regulated by pre-determined patterns (e.g., color and geometric information)
+e.g., stylizing the front layer to a wave:
+
+![wave](https://github.com/KolvacS-W/AI-assisted-generative-p5-/assets/55591358/6dcf51c8-f22e-41e3-a1dc-59b4d4fb2dfc)
+(this example based on art from [Cloudy_v2_20220123 by SamuelYAN](https://openprocessing.org/sketch/1452002))
+
+#### 2. creating generative procedural arts regulated by pre-determined patterns (e.g., color and geometric information)
+
+e.g., regulate the direction of particles by shape:
+
+![Screen_Recording_2024-02-06_at_12 49 20_PM (1)](https://github.com/KolvacS-W/AI-assisted-generative-p5-/assets/55591358/8520791b-0e30-4380-914a-cf2d80f8c64d)
+
+#### 3. library structure
 
 <img width="800" alt="Screen Shot 2024-02-01 at 5 43 02 PM" src="https://github.com/KolvacS-W/AI-assisted-generative-p5-/assets/55591358/e0cf347d-820f-4c79-9732-109657075e91">
 
-### Interface/Library Demo
+### Usage Demo
 #### (01/20/2024)Updated Main interface (in app_captureSD_overlay folder): 
 demo p5.js art from: [Cloudy_v2_20220123 by SamuelYAN](https://openprocessing.org/sketch/1452002)
 
