@@ -34,22 +34,35 @@ e.g., regulate the direction of particles by shape:
 <img width="800" alt="Screen Shot 2024-02-01 at 5 43 02 PM" src="https://github.com/KolvacS-W/AI-assisted-generative-p5-/assets/55591358/e0cf347d-820f-4c79-9732-109657075e91">
 
 ### Usage Demo
-#### (01/20/2024)Updated Main interface (in app_captureSD_overlay folder): 
+#### Use our library on p5.js web editor:
+
+https://github.com/KolvacS-W/AI-assisted-generative-p5-/assets/55591358/b1cb71e1-335f-443a-b3e7-3cb3b77d350f
+
+
+
+
+
+### How to use:
+[detail video tutorial](https://drive.google.com/file/d/1OX5YC96NN-9RhXBQGPb_Ya2MMcLeCFi-/view?usp=sharing)
+
+1.download `newapp_lib` from github and open [front end link \(p5 editor\)](https://editor.p5js.org/wujiaq/sketches/4AljpG5Nn)
+
+2.get [fal api](https://www.fal.ai/dashboard/keys), create image save folder locally 
+
+3.replace fal api / save path in the server.js
+
+4.run `node server.js` in backend 
+
+5.in frontend, write p5.js code, run front end
+
+### ----------Other Demos-------------
+#### (01/20/2024)Old interface (in app_captureSD_overlay folder): 
 demo p5.js art from: [Cloudy_v2_20220123 by SamuelYAN](https://openprocessing.org/sketch/1452002)
 
 We updated the interface, enabling user to stylize anything in p5 in real time. Simply specifying in p5.js code, certain elements will be stylized with tunable parameters
 
 https://github.com/KolvacS-W/AI-assisted-generative-p5-/assets/55591358/ff699062-8542-4dc9-b51b-55d1bc1cce8f
 
-
-
-#### (01/16/2024))Standard Main interface (in standard app folder): 
-demo p5.js art from: [Recursive Tree by Poersch](https://openprocessing.org/sketch/90192)
-
-A novel interface where artists can make full use of both the programmability of code and stylization ability of real time generative AI.
-Current functionalities: real-time stylization, configuration and result browsing for p5.js code:
-
-https://github.com/KolvacS-W/AI-assisted-generative-p5-/assets/55591358/4906bcfb-33d5-4bdc-be29-2ec3fe247645
 
 ### Pattern Regulation Demo:
 [Shrinking particle guided by input masks](https://editor.p5js.org/wujiaq/sketches/pZSMb4Jxv)
