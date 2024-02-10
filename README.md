@@ -29,13 +29,21 @@ e.g., regulate the direction of particles by shape:
 
 ![Screen_Recording_2024-02-06_at_12 49 20_PM (1)](https://github.com/KolvacS-W/AI-assisted-generative-p5-/assets/55591358/8520791b-0e30-4380-914a-cf2d80f8c64d)
 
-#### 3. library structure
+#### 3. example usage case:
+
+Creating [GenP5 Algoithms](https://github.com/KolvacS-W/GenP5-Algorithm) paired with runway
+
+![genal](https://github.com/KolvacS-W/AI-assisted-generative-p5-/assets/55591358/e3e9a157-9fd9-451d-8386-948a4214abc9)
+
+
+### library structure
 
 <img width="800" alt="Screen Shot 2024-02-01 at 5 43 02 PM" src="https://github.com/KolvacS-W/AI-assisted-generative-p5-/assets/55591358/e0cf347d-820f-4c79-9732-109657075e91">
 
 ### Usage Demo
 
 (demo/tutorial based on art of [SamuelYAN](https://openprocessing.org/user/293890/?view=sketches&o=948))
+
 #### Use our library on p5.js web editor:
 
 https://github.com/KolvacS-W/AI-assisted-generative-p5-/assets/55591358/b1cb71e1-335f-443a-b3e7-3cb3b77d350f
