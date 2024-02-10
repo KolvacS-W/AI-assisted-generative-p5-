@@ -1,4 +1,4 @@
-# GenP5: AI-assisted-generative-p5
+# GenP5: AI-assisted-generative-procedural-art
 
 
 This is the code base of the generative p5 project by Jiaqi Wu and Eytan Adar.
