@@ -31,6 +31,9 @@ function setup() {
     buffer2 = createGraphics(400,400);
     buffer2.background("#202020"); // Set the buffer background color
 
+    buffer3 = createGraphics(400,400);
+    buffer3.background("#202020"); // Set the buffer background color
+
     ranges = 50;
     color1 = random(colors1);
     color2 = random(colors2);
@@ -43,6 +46,7 @@ function setup() {
 }
 
 let a = 0;
+let boatX = 0;
 
 function draw() {
         buffer2.clear();
@@ -72,13 +76,34 @@ function draw() {
             buffer.endShape();
         }
 
+        // Draw boat
+        buffer3.clear();
+        buffer3.background("#202020");
+        buffer3.fill("yellow"); // White color for boat
+        buffer3.strokeWeight(2);
+        buffer3.stroke("#000000"); // Black color for boat outline
+        buffer3.beginShape();
+        buffer3.vertex(boatX, 150); // Bottom-left corner
+        buffer3.vertex(boatX + 50, 150); // Bottom-right corner
+        buffer3.vertex(boatX + 25, 100); // Top-middle corner
+        buffer3.endShape(CLOSE); // Close the shape
+
+        boatX += 1; // Move boat horizontally
+
+        if (boatX > buffer3.width) { // If boat goes out of buffer, reset its position
+            boatX = -50;
+        }
+
 
         // End block
 
     
-        if (frameCount % 20 === 0) { 
-            genP5.stylize('sea waves', 0.72, buffer,canvas, 0);
+        if (frameCount % 20 === 0) {
+            
+            genP5.stylize('boat on the ocean', 0.75, buffer3,canvas, 0);
 
-            genP5.stylize('moon', 0.8, buffer2,canvas, 1);
+            genP5.stylize('sea waves', 0.72, buffer,canvas, 1);
+
+            genP5.stylize('moon', 0.8, buffer2,canvas, 2);
         }
 }

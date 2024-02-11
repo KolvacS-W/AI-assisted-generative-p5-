@@ -130,6 +130,7 @@ const falConnection = fal.realtime.connect("110602490-lcm", {
             const request_group = parseInt(result.request_id.split('_')[0]);
             const request_id = parseInt(result.request_id.split('_')[1]);
             addItem(workedidlist, request_group, request_id);
+            // console.log(workedidlist)
             requestInfo.ws.send(JSON.stringify(response));
             console.log('sent to frontend:', requestInfo.request_id)
             // Remove the client request from the list after sending the response
@@ -188,6 +189,8 @@ wss.on('connection', function connection(ws) {
         // Clear worked ID list
         workedidlist = {};
 
+        lastreq2fal = {};
+
 
         console.log(requestQueue)
         console.log(clientRequests)
@@ -207,7 +210,10 @@ function processRequestQueue() {
         const nextRequest = requestQueue[0]; // Peek at the first request in the queue
         const request_group = parseInt(nextRequest.request_id.split('_')[0]);
         const request_id = parseInt(nextRequest.request_id.split('_')[1])
-        // console.log(workedidlist)
+        //prevent error
+        if (!workedidlist[request_group]){
+            workedidlist[request_group] = []
+        }
         // Check if the condition is met to send the request to FAL
         if (request_id === 1 || workedidlist[request_group].includes(request_id - 1)) {
             const data = requestQueue.shift(); // Remove the first request from the queue
