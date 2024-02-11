@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>p5.js with GenP5 Library</title>
+    <style>
+        .container {
+            width: 400px;
+            height: 400px;
+            position: relative;
+            border: 1px solid #ccc;
+            margin-bottom: 20px;
+            display: inline-block; /* Allow side-by-side display */
+            margin-right: 10px; /* Add space between containers */
+        }
+        .overlay {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            color: #fff;
+            text-align: center;
+            padding: 5px; /* Ensure padding for readability */
+            box-sizing: border-box; /* Ensures padding doesn't increase size of the overlay */
+            z-index: 2; /* Ensure overlay is above other contents */
+        }
+        .row {
+            margin-bottom: 20px; /* Add space between rows */
+        }
+        button {
+            margin-bottom: 20px;
+        }
+      #image-display-container {
+          width: 400px;
+          height: auto; /* Automatically adjust the height based on the image aspect ratio */
+      }
+
+    </style>
+</head>
+<body>
+    <div class="row">
+        <!-- P5 canvas placeholder, it will be created by p5.js -->
+        <div id="p5-container" class="container"></div>
+<!--         <button id="start-stop-btn">Start</button> -->
+    </div>
+
+    <div class="row">
+        <div id="screenshot-container-0" class="container">
+            <div class="overlay"></div>
+        </div>
+    </div>
+  
+    <div class="row">
+      <div id="block-container-0" class="container">
+          <div class="overlay"></div>
+      </div>
+      <div id="block-container-1" class="container">
+          <div class="overlay"></div>
+      </div>
+      <div id="block-container-2" class="container">
+          <div class="overlay"></div>
+      </div>
+      <div id="block-container-3" class="container">
+          <div class="overlay"></div>
+      </div>
+  </div>
+
+  <div class="row">
+      <div id="processed-container-0" class="container">
+          <div class="overlay"></div>
+      </div>
+      <div id="processed-container-1" class="container">
+          <div class="overlay"></div>
+      </div>
+      <div id="processed-container-2" class="container">
+          <div class="overlay"></div>
+      </div>
+      <div id="processed-container-3" class="container">
+          <div class="overlay"></div>
+      </div>
+  </div>
+
+
+    <div class="row">
+        <div id="final-container" class="container">
+            <div class="overlay"></div>
+        </div>
+    </div>
+  
+    <div class="row" id="result-gallery-row">
+      <div id="slider-container">
+          <label for="image-slider">Image Slider</label>
+          <input type="range" id="image-slider" min="1" max="20" value="1">
+          <!-- <button id="show-image-button">Show</button> -->
+      </div>
+      <div id="image-display-container">
+          <!-- Image will be displayed here -->
+      </div>
+  </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.4.0/p5.js"></script>
+    <script src="genp5lib.js"></script>
+    <script src="sketch.js"></script>
+</body>
+</html>
