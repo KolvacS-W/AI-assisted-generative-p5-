@@ -17,10 +17,23 @@ class GenP5 {
         this.initSliderListener();
 
     }
+
+    createbuffers(num_buffer, bg_color, size=400){
+        let bufferlist = [];
+        let buffer;
+        for (let i=0; i<num_buffer; i++){
+            buffer = createGraphics(size, size);
+            buffer.background(bg_color)
+            bufferlist.push(buffer)
+        }
+
+        return bufferlist;
+
+    }
   
-    setupCanvas() {
+    setupCanvas(size = 400) {
         // This function is called within the constructor to set up the p5.js canvas
-        const canvas = createCanvas(400, 400); // Create a p5.js canvas of 400x400 pixels
+        const canvas = createCanvas(size, size); // Create a p5.js canvas of 400x400 pixels
         canvas.parent('p5-container'); // Set the parent of the canvas to the HTML element with id 'p5-container'
 
         // Additional canvas setup code can go here if needed
@@ -46,6 +59,15 @@ class GenP5 {
         if (slider) {
             slider.addEventListener('input', () => this.displayImageBasedOnSlider());
         }
+    }
+
+    stylize_buffers(bufferlist, promptlist, strengthlist, captureinterval = 10, canvas){
+        if (frameCount % captureinterval === 0){
+            for (let i=0; i<bufferlist.length; i++){
+                this.stylize(promptlist[i], strengthlist[i], bufferlist[i],canvas, i);
+            }
+        }
+
     }
 
   
@@ -240,7 +262,7 @@ class GenP5 {
             const overlayProcessedImages = (index) => {
                 if (index >= this.buffers.length) {
                     const finalImageUrl = finalCanvas.toDataURL('image/jpeg');
-                    
+
                     //always put the finalimages in the queue of the first buffer, because we need to fix the list
                     this.queueDisplayImage(finalImageUrl, 'final', count, bufferIndex=0);
                     this.saveProcessedImage(finalImageUrl, count);
@@ -296,72 +318,6 @@ class GenP5 {
         screenshotImg.src = this.buffers[bufferIndex].fullscreenshotQueue[count-1];
     }
 
-    //   createAndDisplayFinalImage(processedUrl, count, bufferIndex) {
-    //     const finalCanvas = document.createElement('canvas');
-    //     const ctx = finalCanvas.getContext('2d');
-    //     const screenshotImg = new Image();
-    //     const processedImg = new Image();
-
-    //     screenshotImg.crossOrigin = "anonymous";
-    //     processedImg.crossOrigin = "anonymous";
-
-    //     screenshotImg.onload = () => {
-    //         finalCanvas.width = this.resize;
-    //         finalCanvas.height = this.resize;
-    //         ctx.drawImage(screenshotImg, 0, 0, this.resize, this.resize);
-
-    //         processedImg.onload = () => {
-    //             const processedCanvas = document.createElement('canvas');
-    //             const processedCtx = processedCanvas.getContext('2d');
-    //             processedCanvas.width = this.resize;
-    //             processedCanvas.height = this.resize;
-
-    //             processedCtx.drawImage(processedImg, 0, 0, this.resize, this.resize);
-
-    //             const imageData = processedCtx.getImageData(0, 0, processedCanvas.width, processedCanvas.height);
-    //             const backgroundColor = this.findMostFrequentColor(imageData);
-
-    //             const colorThreshold = 30;
-    //             for (let i = 0; i < imageData.data.length; i += 4) {
-    //                 let r = imageData.data[i];
-    //                 let g = imageData.data[i + 1];
-    //                 let b = imageData.data[i + 2];
-    //                 let distance = Math.sqrt((r - backgroundColor.r) ** 2 + (g - backgroundColor.g) ** 2 + (b - backgroundColor.b) ** 2);
-
-    //                 if (distance <= colorThreshold) {
-    //                     imageData.data[i + 3] = 0;
-    //                 }
-    //             }
-
-    //             processedCtx.putImageData(imageData, 0, 0);
-    //             ctx.drawImage(processedCanvas, 0, 0, this.resize, this.resize);
-
-    //             const finalImageUrl = finalCanvas.toDataURL('image/jpeg');
-    //             this.queueDisplayImage(finalImageUrl, 'final', count);
-    //             this.saveProcessedImage(finalImageUrl, count);
-    //             // this.displayImageBasedOnSlider();
-    //         };
-
-    //         processedImg.onerror = () => {
-    //             console.error('Error loading processed image');
-    //             this.displayingFinal = false;
-    //             this.processDisplayQueue('final');
-    //         };
-
-    //         processedImg.src = processedUrl;
-    //     };
-
-    //     screenshotImg.onerror = () => {
-    //         console.error('Error loading screenshot image');
-    //         this.displayingFinal = false;
-    //         this.processDisplayQueue('final');
-    //     };
-      
-    //     // console.log('check queue', this.fullscreenshotQueue.length)
-    //     // console.log('check count', count)
-
-    //     screenshotImg.src = this.buffers[bufferIndex].fullscreenshotQueue[count];
-    // }
   
     findMostFrequentColor(imageData) {
         let colorCount = {};
