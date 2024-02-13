@@ -84,8 +84,8 @@ function draw() {
         buffer3.stroke("#000000"); // Black color for boat outline
         buffer3.beginShape();
         buffer3.vertex(boatX, 150); // Bottom-left corner
-        buffer3.vertex(boatX + 50, 150); // Bottom-right corner
-        buffer3.vertex(boatX + 25, 100); // Top-middle corner
+        buffer3.vertex(boatX + 100, 150); // Bottom-right corner
+        buffer3.vertex(boatX + 50, 100); // Top-middle corner
         buffer3.endShape(CLOSE); // Close the shape
 
         boatX += 1; // Move boat horizontally
@@ -100,7 +100,7 @@ function draw() {
     
         if (frameCount % 20 === 0) {
             
-            genP5.stylize('boat on the ocean', 0.75, buffer3,canvas, 0);
+            genP5.stylize('yellow banana boat', 0.75, buffer3,canvas, 0);
 
             genP5.stylize('sea waves', 0.72, buffer,canvas, 1);
 

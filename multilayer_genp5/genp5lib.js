@@ -62,7 +62,8 @@ class GenP5 {
 
         const outBlockImage = canvas.toDataURL('image/jpeg', 0.5);
         this.queueDisplayImage(outBlockImage, 'screenshot', this.buffers[bufferIndex].screenshotImageCounter, bufferIndex);
-
+        
+        this.buffers[bufferIndex].fullscreenshotQueue.push(outBlockImage);
         
     }
   
@@ -82,6 +83,7 @@ class GenP5 {
             blockQueue:  [],
             processedQueue:  [],
             finalQueue:  [],
+            fullprocessedQueue: [],
 
             displayingScreenshot:  false,
             displayingBlock : false,
@@ -109,7 +111,9 @@ class GenP5 {
                 const bufferIndex = parseInt(data.result.request_id.split('_')[0]);
                 this.queueDisplayImage(processedImageUrl, 'processed', data.count, bufferIndex);
 
-                // this.createAndDisplayFinalImage(processedImageUrl, data.count);
+                this.buffers[bufferIndex].fullprocessedQueue.push(processedImageUrl);
+
+                this.createAndDisplayFinalImage(processedImageUrl, data.count, bufferIndex);
             }
         
     }
@@ -208,73 +212,156 @@ class GenP5 {
         img.src = imageUrl;
     }
 
-
-      createAndDisplayFinalImage(processedUrl, count) {
+    createAndDisplayFinalImage(processedUrl, count, bufferIndex) {
+        // Check if all processedQueue in this.buffers have the image with bufferIndex
+        // console.log('---')
+        for (const buffer of this.buffers) {
+            // console.log('iterate:', buffer.fullprocessedQueue.length)
+            if (!buffer.fullprocessedQueue[bufferIndex]) {
+                // If any processedQueue doesn't have an image at bufferIndex, return directly
+                console.error('Not all buffers contain an image at the specified bufferIndex');
+                // console.log('img:', bufferIndex, count)
+                return;
+            }
+        }
+    
         const finalCanvas = document.createElement('canvas');
         const ctx = finalCanvas.getContext('2d');
         const screenshotImg = new Image();
-        const processedImg = new Image();
-
+    
         screenshotImg.crossOrigin = "anonymous";
-        processedImg.crossOrigin = "anonymous";
-
+    
         screenshotImg.onload = () => {
             finalCanvas.width = this.resize;
             finalCanvas.height = this.resize;
             ctx.drawImage(screenshotImg, 0, 0, this.resize, this.resize);
-
-            processedImg.onload = () => {
-                const processedCanvas = document.createElement('canvas');
-                const processedCtx = processedCanvas.getContext('2d');
-                processedCanvas.width = this.resize;
-                processedCanvas.height = this.resize;
-
-                processedCtx.drawImage(processedImg, 0, 0, this.resize, this.resize);
-
-                const imageData = processedCtx.getImageData(0, 0, processedCanvas.width, processedCanvas.height);
-                const backgroundColor = this.findMostFrequentColor(imageData);
-
-                const colorThreshold = 30;
-                for (let i = 0; i < imageData.data.length; i += 4) {
-                    let r = imageData.data[i];
-                    let g = imageData.data[i + 1];
-                    let b = imageData.data[i + 2];
-                    let distance = Math.sqrt((r - backgroundColor.r) ** 2 + (g - backgroundColor.g) ** 2 + (b - backgroundColor.b) ** 2);
-
-                    if (distance <= colorThreshold) {
-                        imageData.data[i + 3] = 0;
-                    }
+    
+            // Function to process and overlay each processed image
+            const overlayProcessedImages = (index) => {
+                if (index >= this.buffers.length) {
+                    const finalImageUrl = finalCanvas.toDataURL('image/jpeg');
+                    
+                    //always put the finalimages in the queue of the first buffer, because we need to fix the list
+                    this.queueDisplayImage(finalImageUrl, 'final', count, bufferIndex=0);
+                    this.saveProcessedImage(finalImageUrl, count);
+                    return;
                 }
-
-                processedCtx.putImageData(imageData, 0, 0);
-                ctx.drawImage(processedCanvas, 0, 0, this.resize, this.resize);
-
-                const finalImageUrl = finalCanvas.toDataURL('image/jpeg');
-                this.queueDisplayImage(finalImageUrl, 'final', count);
-                this.saveProcessedImage(finalImageUrl, count);
-                // this.displayImageBasedOnSlider();
+    
+                const processedImg = new Image();
+                processedImg.crossOrigin = "anonymous";
+                processedImg.onload = () => {
+                    const processedCanvas = document.createElement('canvas');
+                    const processedCtx = processedCanvas.getContext('2d');
+                    processedCanvas.width = this.resize;
+                    processedCanvas.height = this.resize;
+    
+                    processedCtx.drawImage(processedImg, 0, 0, this.resize, this.resize);
+                    const imageData = processedCtx.getImageData(0, 0, processedCanvas.width, processedCanvas.height);
+                    const backgroundColor = this.findMostFrequentColor(imageData);
+    
+                    const colorThreshold = 30; // Adjust as needed
+                    for (let i = 0; i < imageData.data.length; i += 4) {
+                        let r = imageData.data[i];
+                        let g = imageData.data[i + 1];
+                        let b = imageData.data[i + 2];
+                        let distance = Math.sqrt((r - backgroundColor.r) ** 2 + (g - backgroundColor.g) ** 2 + (b - backgroundColor.b) ** 2);
+    
+                        if (distance <= colorThreshold) {
+                            imageData.data[i + 3] = 0; // Make this pixel transparent
+                        }
+                    }
+    
+                    processedCtx.putImageData(imageData, 0, 0);
+                    ctx.drawImage(processedCanvas, 0, 0, this.resize, this.resize);
+                    overlayProcessedImages(index + 1); // Proceed to next image
+                };
+                processedImg.onerror = () => {
+                    console.error(`Error loading processed image from buffer ${index}`);
+                    console.log(count)
+                    console.log(this.buffers[index].fullprocessedQueue.length)
+                };
+                processedImg.src = this.buffers[index].fullprocessedQueue[count-1];
             };
-
-            processedImg.onerror = () => {
-                console.error('Error loading processed image');
-                this.displayingFinal = false;
-                this.processDisplayQueue('final');
-            };
-
-            processedImg.src = processedUrl;
+    
+            // Start overlaying processed images
+            overlayProcessedImages(0);
         };
-
+    
         screenshotImg.onerror = () => {
             console.error('Error loading screenshot image');
             this.displayingFinal = false;
             this.processDisplayQueue('final');
         };
-      
-        // console.log('check queue', this.fullscreenshotQueue.length)
-        // console.log('check count', count)
-
-        screenshotImg.src = this.fullscreenshotQueue[count];
+    
+        screenshotImg.src = this.buffers[bufferIndex].fullscreenshotQueue[count-1];
     }
+
+    //   createAndDisplayFinalImage(processedUrl, count, bufferIndex) {
+    //     const finalCanvas = document.createElement('canvas');
+    //     const ctx = finalCanvas.getContext('2d');
+    //     const screenshotImg = new Image();
+    //     const processedImg = new Image();
+
+    //     screenshotImg.crossOrigin = "anonymous";
+    //     processedImg.crossOrigin = "anonymous";
+
+    //     screenshotImg.onload = () => {
+    //         finalCanvas.width = this.resize;
+    //         finalCanvas.height = this.resize;
+    //         ctx.drawImage(screenshotImg, 0, 0, this.resize, this.resize);
+
+    //         processedImg.onload = () => {
+    //             const processedCanvas = document.createElement('canvas');
+    //             const processedCtx = processedCanvas.getContext('2d');
+    //             processedCanvas.width = this.resize;
+    //             processedCanvas.height = this.resize;
+
+    //             processedCtx.drawImage(processedImg, 0, 0, this.resize, this.resize);
+
+    //             const imageData = processedCtx.getImageData(0, 0, processedCanvas.width, processedCanvas.height);
+    //             const backgroundColor = this.findMostFrequentColor(imageData);
+
+    //             const colorThreshold = 30;
+    //             for (let i = 0; i < imageData.data.length; i += 4) {
+    //                 let r = imageData.data[i];
+    //                 let g = imageData.data[i + 1];
+    //                 let b = imageData.data[i + 2];
+    //                 let distance = Math.sqrt((r - backgroundColor.r) ** 2 + (g - backgroundColor.g) ** 2 + (b - backgroundColor.b) ** 2);
+
+    //                 if (distance <= colorThreshold) {
+    //                     imageData.data[i + 3] = 0;
+    //                 }
+    //             }
+
+    //             processedCtx.putImageData(imageData, 0, 0);
+    //             ctx.drawImage(processedCanvas, 0, 0, this.resize, this.resize);
+
+    //             const finalImageUrl = finalCanvas.toDataURL('image/jpeg');
+    //             this.queueDisplayImage(finalImageUrl, 'final', count);
+    //             this.saveProcessedImage(finalImageUrl, count);
+    //             // this.displayImageBasedOnSlider();
+    //         };
+
+    //         processedImg.onerror = () => {
+    //             console.error('Error loading processed image');
+    //             this.displayingFinal = false;
+    //             this.processDisplayQueue('final');
+    //         };
+
+    //         processedImg.src = processedUrl;
+    //     };
+
+    //     screenshotImg.onerror = () => {
+    //         console.error('Error loading screenshot image');
+    //         this.displayingFinal = false;
+    //         this.processDisplayQueue('final');
+    //     };
+      
+    //     // console.log('check queue', this.fullscreenshotQueue.length)
+    //     // console.log('check count', count)
+
+    //     screenshotImg.src = this.buffers[bufferIndex].fullscreenshotQueue[count];
+    // }
   
     findMostFrequentColor(imageData) {
         let colorCount = {};
