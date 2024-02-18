@@ -5,6 +5,7 @@ class GenP5 {
         this.resize = resize;
         this.imagedisplaytime = 1000;
         this.ws = null;
+        this.finalQueue = [];
       
         // Close the WebSocket connection when the window is unloaded or closed
         window.addEventListener('beforeunload', () => {
@@ -18,12 +19,24 @@ class GenP5 {
 
     }
 
-    createbuffers(num_buffer, bg_color, size=400){
+    createstylizebuffers(num_buffer, bg_color, size=400){
         let bufferlist = [];
         let buffer;
         for (let i=0; i<num_buffer; i++){
             buffer = createGraphics(size, size);
             buffer.background(bg_color)
+            bufferlist.push(buffer)
+        }
+
+        return bufferlist;
+
+    }
+  
+      createp5contentbuffers(num_buffer, size=400){
+        let bufferlist = [];
+        let buffer;
+        for (let i=0; i<num_buffer; i++){
+            buffer = createGraphics(size, size);
             bufferlist.push(buffer)
         }
 
@@ -241,7 +254,7 @@ class GenP5 {
             // console.log('iterate:', buffer.fullprocessedQueue.length)
             if (!buffer.fullprocessedQueue[bufferIndex]) {
                 // If any processedQueue doesn't have an image at bufferIndex, return directly
-                console.error('Not all buffers contain an image at the specified bufferIndex');
+                console.log('Not all buffers contain an image at the specified bufferIndex');
                 // console.log('img:', bufferIndex, count)
                 return;
             }
@@ -266,6 +279,7 @@ class GenP5 {
                     //always put the finalimages in the queue of the first buffer, because we need to fix the list
                     this.queueDisplayImage(finalImageUrl, 'final', count, bufferIndex=0);
                     this.saveProcessedImage(finalImageUrl, count);
+                    this.finalQueue.push(finalImageUrl)
                     return;
                 }
     
@@ -298,7 +312,7 @@ class GenP5 {
                     overlayProcessedImages(index + 1); // Proceed to next image
                 };
                 processedImg.onerror = () => {
-                    console.error(`Error loading processed image from buffer ${index}`);
+                    console.log(`Error loading processed image from buffer ${index}`);
                     console.log(count)
                     console.log(this.buffers[index].fullprocessedQueue.length)
                 };
@@ -317,6 +331,53 @@ class GenP5 {
     
         screenshotImg.src = this.buffers[bufferIndex].fullscreenshotQueue[count-1];
     }
+  
+   createseparateBackgroundCanvas(frameRateVal, storedFrames) {
+      console.log('bg canvas initiated');
+     let imageUrlList = this.finalQueue
+     let containerId = 'additional-canvas-container'
+      let imgIndex = 0; // Current image index
+      let sequenceRunning = false; // Flag to indicate if the sequence is currently running
+
+      let s = function(sketch) {
+          sketch.setup = function() {
+              let c = sketch.createCanvas(400, 400);
+              c.parent(containerId);
+              sketch.frameRate(frameRateVal);
+
+              let button = sketch.createButton('Start Sequence');
+              button.parent(containerId); // Set the parent container for the button
+              button.id('sequence-button'); // Optional: Assign an ID for styling
+              button.mousePressed(() => {
+                  console.log('Sequence started', imageUrlList.length);
+                  imgIndex = 0;
+                  sequenceRunning = true;
+                  sketch.loop();
+              });
+
+              sketch.noLoop();
+          };
+
+          sketch.draw = function() {
+              if (sequenceRunning && imgIndex < imageUrlList.length && imgIndex < storedFrames.length) {
+                  sketch.loadImage(imageUrlList[imgIndex], (img) => {
+                      sketch.background(img); // Draw the current background image
+                      sketch.image(storedFrames[imgIndex], 0, 0); // Overlay the corresponding buffer4 frame
+                      imgIndex++;
+                      if (imgIndex >= imageUrlList.length || imgIndex >= storedFrames.length) {
+                          imgIndex = 0;
+                          sequenceRunning = false;
+                          sketch.noLoop();
+                      }
+                  });
+              }
+          };
+      };
+
+      new p5(s);
+  }
+
+
 
   
     findMostFrequentColor(imageData) {

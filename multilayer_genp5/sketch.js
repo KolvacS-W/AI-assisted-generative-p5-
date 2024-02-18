@@ -15,6 +15,8 @@ let colors1 = "fef9fb-fafdff-ffffff-fcfbf4-f9f8f6".split("-").map((a) => "#" + a
 let colors2 = "8c75ff-c553d2-2dfd60-2788f5-23054f-f21252-8834f1-c4dd92-184fd3-f9fee2-2E294E-541388-F1E9DA-FFD400-D90368-e9baaa-ffa07a-164555-ffe1d0-acd9e7-4596c7-6d8370-e45240-21d3a4-3303f9-cd2220-173df6-244ca8-a00360-b31016".split("-").map((a) => "#" + a);
 let color1, color2;
 let buffer1, buffer2, buffer3;
+let storedframes = [];
+let drops = [];
 
 function setup() {
 
@@ -27,20 +29,29 @@ function setup() {
     background("#202020");
 
     //create buffers
-    [buffer1, buffer2, buffer3] = genP5.createbuffers(3, 'black', 400);
-
+    [buffer1, buffer2] = genP5.createstylizebuffers(2, 'black', 400);
+    
+    [buffer3] = genP5.createp5contentbuffers(1, 400);
+  
     ranges = 50;
     color1 = random(colors1);
     color2 = random(colors2);
-
-    for (let y = 0; y < height/1.5; y++) {
-        stroke(random(colors2));   
-        line(0, y, width, y)
-    }
+  
+  genP5.createseparateBackgroundCanvas(100, storedframes)
+  
+  for (let i = 0; i < 100; i++) { // Create 100 raindrops
+    drops.push({
+      x: random(width), // Random x-coordinate within canvas width
+      y: random(0, 400), // Random y-coordinate above the canvas
+      speed: random(2, 5), // Random falling speed
+      length: random(10, 20), // Random length of the raindrop
+      thickness: random(0.2, 0.5) // Random thickness of the raindrop
+    });
+  }
   
 }
 
-let a = 0;
+let a = 2;
 let boatX = 0;
 
 function draw() {
@@ -71,27 +82,26 @@ function draw() {
             buffer2.endShape();
         }
 
-        // Draw boat
-        buffer3.clear();
-        buffer3.background("#202020");
-        buffer3.fill("yellow"); // White color for boat
-        buffer3.strokeWeight(2);
-        buffer3.stroke("#000000"); // Black color for boat outline
-        buffer3.beginShape();
-        buffer3.vertex(boatX, 150); // Bottom-left corner
-        buffer3.vertex(boatX + 50, 150); // Bottom-right corner
-        buffer3.vertex(boatX + 25, 50); // Top-middle corner
-        buffer3.endShape(CLOSE); // Close the shape
 
-        boatX += 1; // Move boat horizontally
-
-        if (boatX > buffer3.width) { // If boat goes out of buffer, reset its position
-            boatX = -50;
+      buffer3.clear()
+      buffer3.stroke('white'); // Set the color of the raindrops
+      for (let i = 0; i < drops.length; i++) {
+        let drop = drops[i];
+        drop.y += drop.speed; // Move the raindrop down by its speed
+        if (drop.y > buffer3.height) {
+            drop.y = random(-200, -100); // Reset y-coordinate above the canvas
+            drop.x = random(buffer3.width); // Reset x-coordinate to a new random position within the width
         }
+        buffer3.strokeWeight(drop.thickness); // Set the thickness of the raindrop
+        buffer3.line(drop.x, drop.y, drop.x, drop.y + drop.length); // Draw the raindrop line                   
+      }
+  
+        storedframes.push(buffer3.get()); // Store the current frame of buffer4
+  
+        promptlist =['realistic moon', 'sea waves']
+        strengthlist = [0.9, 0.72]
 
-        promptlist =['realistic moon', 'sea waves', 'yellow flying airplane with pure black background']
-        strengthlist = [0.9, 0.72, 0.75]
-
-        genP5.stylize_buffers([buffer1, buffer2, buffer3], promptlist, strengthlist, 20, canvas);
+        genP5.stylize_buffers([buffer1, buffer2], promptlist, strengthlist, 20, canvas);
 
 }
+

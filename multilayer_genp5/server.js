@@ -191,6 +191,8 @@ wss.on('connection', function connection(ws) {
 
         lastreq2fal = {};
 
+        imagenum = 0;
+
 
         console.log(requestQueue)
         console.log(clientRequests)
