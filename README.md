@@ -1,4 +1,5 @@
 # GenP5: AI-assisted-generative-procedural-art
+![genp5new2](https://github.com/KolvacS-W/AI-assisted-generative-p5-/assets/55591358/4c6b039e-59a3-40e6-9f3e-30f9e896d34c)
 
 
 This is the code base of the generative p5 project by Jiaqi Wu and Eytan Adar.
