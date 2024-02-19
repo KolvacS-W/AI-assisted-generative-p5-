@@ -42,11 +42,13 @@ Creating [GenP5 Algoithms](https://github.com/KolvacS-W/GenP5-Algorithm) paired 
 
 ### Usage Demo
 
-(demo/tutorial based on art of [SamuelYAN](https://openprocessing.org/user/293890/?view=sketches&o=948))
+(some p5 code effects in demo/tutorial based on art of [SamuelYAN](https://openprocessing.org/user/293890/?view=sketches&o=948))
 
 #### Use our library on p5.js web editor:
 
-https://github.com/KolvacS-W/AI-assisted-generative-p5-/assets/55591358/b1cb71e1-335f-443a-b3e7-3cb3b77d350f
+
+https://github.com/KolvacS-W/AI-assisted-generative-p5-/assets/55591358/1c71b62b-eb6c-4350-bf1f-42d2418e6787
+
 
 
 
@@ -55,7 +57,7 @@ https://github.com/KolvacS-W/AI-assisted-generative-p5-/assets/55591358/b1cb71e1
 ### How to use:
 [detail video tutorial](https://drive.google.com/file/d/1OX5YC96NN-9RhXBQGPb_Ya2MMcLeCFi-/view?usp=sharing)
 
-1.download `newapp_lib` from github and open [front end link \(p5 editor\)](https://editor.p5js.org/wujiaq/sketches/4AljpG5Nn)
+1.download `multilatyer_genp5` from github and open [front end link \(p5 editor\)](https://editor.p5js.org/wujiaq/sketches/4AljpG5Nn)
 
 2.get [fal api](https://www.fal.ai/dashboard/keys), create image save folder locally 
 
